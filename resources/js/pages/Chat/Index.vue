@@ -12,6 +12,7 @@ import ForwardMessageDialog from '@/components/chat/ForwardMessageDialog.vue';
 import MessageComposer from '@/components/chat/MessageComposer.vue';
 import MessageThread from '@/components/chat/MessageThread.vue';
 import NewConversationDialog from '@/components/chat/NewConversationDialog.vue';
+import UserProfilePanel from '@/components/chat/UserProfilePanel.vue';
 
 const props = defineProps<ChatPageProps>();
 
@@ -35,6 +36,10 @@ const {
     deleteForEveryone,
     reactToMessage,
     forwardMessage,
+    archiveConversation,
+    unarchiveConversation,
+    blockUser,
+    unblockUser,
     createConversation,
     refreshConversations,
     joinConversationChannel,
@@ -43,9 +48,12 @@ const {
 
 const showNewChatDialog = ref(false);
 const showForwardDialog = ref(false);
+const showProfilePanel = ref(false);
 const forwardingMessageId = ref<number | null>(null);
 const mobileShowThread = ref(!!props.activeConversation);
 const threadRef = ref<InstanceType<typeof MessageThread> | null>(null);
+const localIsArchived = ref(props.activeConversation?.is_archived ?? false);
+const localIsBlocked = ref(props.activeConversation?.is_blocked ?? false);
 
 const isOnline = computed(() => {
     if (!activeConversation.value) return false;
@@ -102,6 +110,38 @@ async function handleForwardSelect(targetConversationId: number) {
         forwardingMessageId.value = null;
     }
 }
+
+async function handleArchive() {
+    if (!activeConversation.value) return;
+    const ok = await archiveConversation(activeConversation.value.id);
+    if (ok) {
+        localIsArchived.value = true;
+        showProfilePanel.value = false;
+        router.visit('/chat', { preserveState: false });
+    }
+}
+
+async function handleUnarchive() {
+    if (!activeConversation.value) return;
+    const ok = await unarchiveConversation(activeConversation.value.id);
+    if (ok) {
+        localIsArchived.value = false;
+    }
+}
+
+async function handleBlock(userId: number) {
+    const ok = await blockUser(userId);
+    if (ok) {
+        localIsBlocked.value = true;
+    }
+}
+
+async function handleUnblock(userId: number) {
+    const ok = await unblockUser(userId);
+    if (ok) {
+        localIsBlocked.value = false;
+    }
+}
 </script>
 
 <template>
@@ -128,21 +168,22 @@ async function handleForwardSelect(targetConversationId: number) {
                 />
             </div>
 
-            <!-- Message thread panel -->
+            <!-- Message thread panel + profile panel -->
             <div
                 :class="
                     cn(
-                        'bg-background flex min-w-0 flex-1 flex-col',
+                        'bg-background flex min-w-0 flex-1',
                         !mobileShowThread ? 'hidden md:flex' : 'flex',
                     )
                 "
             >
-                <template v-if="activeConversation">
+                <div v-if="activeConversation" class="flex min-w-0 flex-1 flex-col">
                     <ChatHeader
                         :conversation="activeConversation"
                         :online="isOnline"
                         :typing-names="typingNames"
                         @back="handleBack"
+                        @open-profile="showProfilePanel = !showProfilePanel"
                     />
 
                     <MessageThread
@@ -169,7 +210,7 @@ async function handleForwardSelect(targetConversationId: number) {
                         @send="handleSend"
                         @typing="handleTyping"
                     />
-                </template>
+                </div>
 
                 <!-- Empty state -->
                 <div v-else class="flex flex-1 flex-col items-center justify-center gap-3 p-8">
@@ -187,6 +228,20 @@ async function handleForwardSelect(targetConversationId: number) {
                         Start a Conversation
                     </button>
                 </div>
+
+                <!-- Profile panel slide-over -->
+                <UserProfilePanel
+                    v-if="activeConversation && showProfilePanel"
+                    :conversation="activeConversation"
+                    :auth-user-id="authUserId"
+                    :is-archived="localIsArchived"
+                    :is-blocked="localIsBlocked"
+                    @close="showProfilePanel = false"
+                    @archive="handleArchive"
+                    @unarchive="handleUnarchive"
+                    @block="handleBlock"
+                    @unblock="handleUnblock"
+                />
             </div>
         </div>
 

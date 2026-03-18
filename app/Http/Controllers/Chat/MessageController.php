@@ -8,6 +8,7 @@ use App\Events\MessageRead;
 use App\Events\MessageSent;
 use App\Events\UserTyping;
 use App\Http\Controllers\Controller;
+use App\Models\BlockedUser;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\MessageDeletion;
@@ -39,6 +40,7 @@ class MessageController extends Controller
 
         $before = $request->query('before');
         $query = $conversation->messages()
+            ->withTrashed()
             ->visibleTo($userId)
             ->with(['sender:id,name,email,avatar', 'reactions'])
             ->latest()
@@ -61,6 +63,26 @@ class MessageController extends Controller
     public function store(Request $request, Conversation $conversation): JsonResponse
     {
         $this->authorizeParticipant($request->user(), $conversation);
+
+        if ($conversation->type === 'private') {
+            $otherParticipant = $conversation->activeParticipants()
+                ->where('user_id', '!=', $request->user()->id)
+                ->first();
+
+            if ($otherParticipant) {
+                $blocked = BlockedUser::where(function ($q) use ($request, $otherParticipant) {
+                    $q->where('user_id', $request->user()->id)
+                        ->where('blocked_user_id', $otherParticipant->id);
+                })->orWhere(function ($q) use ($request, $otherParticipant) {
+                    $q->where('user_id', $otherParticipant->id)
+                        ->where('blocked_user_id', $request->user()->id);
+                })->exists();
+
+                if ($blocked) {
+                    return response()->json(['error' => 'Cannot send messages in this conversation.'], 403);
+                }
+            }
+        }
 
         $validated = $request->validate([
             'body' => 'nullable|string|max:10000',
@@ -267,37 +289,46 @@ class MessageController extends Controller
             'count' => $group->count(),
             'users' => $group->map(fn ($r) => [
                 'id' => $r->user_id,
-                'name' => $r->user->name,
+                'name' => $r->user->name ?? 'Deleted User',
             ])->values()->all(),
         ])->values()->all();
     }
 
     private function formatMessage(Message $message): array
     {
-        $reactions = $message->reactions->groupBy('emoji')->map(fn ($group, $emoji) => [
+        $isDeleted = $message->trashed();
+
+        $reactions = $isDeleted ? [] : $message->reactions->groupBy('emoji')->map(fn ($group, $emoji) => [
             'emoji' => $emoji,
             'count' => $group->count(),
             'users' => $group->map(fn ($r) => [
                 'id' => $r->user_id,
-                'name' => $r->user->name ?? 'Unknown',
+                'name' => $r->user->name ?? 'Deleted User',
             ])->values()->all(),
         ])->values()->all();
+
+        $sender = $message->sender;
 
         return [
             'id' => $message->id,
             'conversation_id' => $message->conversation_id,
             'sender_id' => $message->sender_id,
-            'sender' => $message->sender ? [
-                'id' => $message->sender->id,
-                'name' => $message->sender->name,
-                'avatar' => $message->sender->avatar ?? null,
-            ] : null,
+            'sender' => $sender ? [
+                'id' => $sender->id,
+                'name' => $sender->name,
+                'avatar' => $sender->avatar ?? null,
+            ] : [
+                'id' => 0,
+                'name' => 'Deleted User',
+                'avatar' => null,
+            ],
             'type' => $message->type,
-            'body' => $message->body,
-            'metadata' => $message->metadata,
+            'body' => $isDeleted ? null : $message->body,
+            'metadata' => $isDeleted ? null : $message->metadata,
             'parent_id' => $message->parent_id,
             'created_at' => $message->created_at->toISOString(),
             'reactions' => $reactions,
+            'deleted_for_everyone' => $isDeleted,
         ];
     }
 }

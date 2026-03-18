@@ -11,6 +11,7 @@ const props = defineProps<{
 
 defineEmits<{
     back: [];
+    openProfile: [];
 }>();
 </script>
 
@@ -23,30 +24,35 @@ defineEmits<{
             <ArrowLeft class="size-5" />
         </button>
 
-        <ChatAvatar
-            :name="conversation.name || 'Chat'"
-            :avatar="conversation.avatar"
-            :online="online"
-            show-status
-        />
+        <button
+            class="flex min-w-0 flex-1 items-center gap-3 text-left"
+            @click="$emit('openProfile')"
+        >
+            <ChatAvatar
+                :name="conversation.name || 'Chat'"
+                :avatar="conversation.avatar"
+                :online="online"
+                show-status
+            />
 
-        <div class="min-w-0 flex-1">
-            <h3 class="truncate text-sm font-semibold">{{ conversation.name || 'Chat' }}</h3>
-            <p v-if="typingNames.length > 0" class="text-primary animate-pulse text-xs">
-                <template v-if="typingNames.length === 1">{{ typingNames[0] }} is typing...</template>
-                <template v-else>{{ typingNames.length }} people are typing...</template>
-            </p>
-            <p v-else class="text-xs">
-                <span v-if="online" class="inline-flex items-center gap-1 text-emerald-500">
-                    <span class="inline-block size-1.5 rounded-full bg-emerald-500" />
-                    Online
-                </span>
-                <span v-else class="text-muted-foreground">Offline</span>
-                <template v-if="conversation.type === 'group'">
-                    <span class="text-muted-foreground"> &middot; {{ conversation.participants.length }} members</span>
-                </template>
-            </p>
-        </div>
+            <div class="min-w-0 flex-1">
+                <h3 class="truncate text-sm font-semibold">{{ conversation.name || 'Chat' }}</h3>
+                <p v-if="typingNames.length > 0" class="text-primary animate-pulse text-xs">
+                    <template v-if="typingNames.length === 1">{{ typingNames[0] }} is typing...</template>
+                    <template v-else>{{ typingNames.length }} people are typing...</template>
+                </p>
+                <p v-else class="text-xs">
+                    <span v-if="online" class="inline-flex items-center gap-1 text-emerald-500">
+                        <span class="inline-block size-1.5 rounded-full bg-emerald-500" />
+                        Online
+                    </span>
+                    <span v-else class="text-muted-foreground">Offline</span>
+                    <template v-if="conversation.type === 'group'">
+                        <span class="text-muted-foreground"> &middot; {{ conversation.participants.length }} members</span>
+                    </template>
+                </p>
+            </div>
+        </button>
 
         <div class="flex items-center gap-1">
             <button class="text-muted-foreground hover:text-foreground rounded-md p-2 transition-colors hover:bg-muted">

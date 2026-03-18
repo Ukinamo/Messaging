@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Chat;
 
 use App\Http\Controllers\Controller;
+use App\Models\ArchivedConversation;
+use App\Models\BlockedUser;
 use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -24,6 +26,7 @@ class ConversationController extends Controller
         $this->authorizeParticipant($request->user(), $conversation);
 
         $messages = $conversation->messages()
+            ->withTrashed()
             ->visibleTo($request->user()->id)
             ->with(['sender:id,name,email,avatar', 'reactions.user:id,name'])
             ->latest()
@@ -51,6 +54,20 @@ class ConversationController extends Controller
             ->whereNotNull('conversation_participants.last_read_message_id')
             ->max('conversation_participants.last_read_message_id') ?? 0;
 
+        $isArchived = ArchivedConversation::where('user_id', $request->user()->id)
+            ->where('conversation_id', $conversation->id)
+            ->exists();
+
+        $otherUserId = null;
+        $isBlocked = false;
+        if ($conversation->type === 'private') {
+            $other = $participants->firstWhere('id', '!=', $request->user()->id);
+            $otherUserId = $other?->id;
+            if ($otherUserId) {
+                $isBlocked = $request->user()->hasBlocked($otherUserId);
+            }
+        }
+
         return Inertia::render('Chat/Index', [
             'conversations' => $this->getConversationsForUser($request->user()),
             'activeConversation' => [
@@ -61,6 +78,8 @@ class ConversationController extends Controller
                 'participants' => $participants,
                 'messages' => $messages,
                 'last_read_by_others' => (int) $lastReadByOthers,
+                'is_archived' => $isArchived,
+                'is_blocked' => $isBlocked,
             ],
         ]);
     }
@@ -134,7 +153,11 @@ class ConversationController extends Controller
 
     private function getConversationsForUser(User $user): array
     {
+        $archivedIds = ArchivedConversation::where('user_id', $user->id)
+            ->pluck('conversation_id');
+
         $conversations = Conversation::forUser($user->id)
+            ->whereNotIn('conversations.id', $archivedIds)
             ->with([
                 'latestMessage.sender:id,name',
                 'activeParticipants:users.id,users.name,users.email,users.avatar',
@@ -171,12 +194,79 @@ class ConversationController extends Controller
                     'id' => $conversation->latestMessage->id,
                     'body' => $conversation->latestMessage->body,
                     'type' => $conversation->latestMessage->type,
-                    'sender_name' => $conversation->latestMessage->sender?->name,
+                    'sender_name' => $conversation->latestMessage->sender?->name ?? 'Deleted User',
                     'created_at' => $conversation->latestMessage->created_at->toISOString(),
                 ] : null,
                 'unread_count' => $unreadCount,
             ];
         })->toArray();
+    }
+
+    public function archivedIndex(Request $request): Response
+    {
+        $user = $request->user();
+
+        $archivedIds = ArchivedConversation::where('user_id', $user->id)
+            ->pluck('conversation_id');
+
+        $conversations = Conversation::whereIn('id', $archivedIds)
+            ->whereHas('activeParticipants', fn ($q) => $q->where('user_id', $user->id))
+            ->with([
+                'latestMessage.sender:id,name',
+                'activeParticipants:users.id,users.name,users.email,users.avatar',
+            ])
+            ->get()
+            ->sortByDesc(fn ($c) => $c->latestMessage?->created_at ?? $c->created_at)
+            ->values();
+
+        $formatted = $conversations->map(function ($conversation) use ($user) {
+            $other = $conversation->getOtherParticipant($user->id);
+
+            return [
+                'id' => $conversation->id,
+                'type' => $conversation->type,
+                'name' => $conversation->type === 'private'
+                    ? $other?->name ?? 'Deleted User'
+                    : $conversation->name,
+                'avatar' => $conversation->type === 'private'
+                    ? $other?->avatar
+                    : $conversation->avatar,
+                'latest_message' => $conversation->latestMessage ? [
+                    'id' => $conversation->latestMessage->id,
+                    'body' => $conversation->latestMessage->body,
+                    'type' => $conversation->latestMessage->type,
+                    'sender_name' => $conversation->latestMessage->sender?->name ?? 'Deleted User',
+                    'created_at' => $conversation->latestMessage->created_at->toISOString(),
+                ] : null,
+            ];
+        })->toArray();
+
+        return Inertia::render('Chat/Archived', [
+            'archivedConversations' => $formatted,
+        ]);
+    }
+
+    public function archive(Request $request, Conversation $conversation): JsonResponse
+    {
+        $this->authorizeParticipant($request->user(), $conversation);
+
+        ArchivedConversation::firstOrCreate([
+            'user_id' => $request->user()->id,
+            'conversation_id' => $conversation->id,
+        ]);
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function restore(Request $request, Conversation $conversation): JsonResponse
+    {
+        $this->authorizeParticipant($request->user(), $conversation);
+
+        ArchivedConversation::where('user_id', $request->user()->id)
+            ->where('conversation_id', $conversation->id)
+            ->delete();
+
+        return response()->json(['ok' => true]);
     }
 
     private function authorizeParticipant(User $user, Conversation $conversation): void
@@ -190,30 +280,39 @@ class ConversationController extends Controller
 
     private function formatMessageWithReactions($message): array
     {
-        $reactions = $message->reactions->groupBy('emoji')->map(fn ($group, $emoji) => [
+        $isDeleted = $message->trashed();
+
+        $reactions = $isDeleted ? [] : $message->reactions->groupBy('emoji')->map(fn ($group, $emoji) => [
             'emoji' => $emoji,
             'count' => $group->count(),
             'users' => $group->map(fn ($r) => [
                 'id' => $r->user_id,
-                'name' => $r->user->name ?? 'Unknown',
+                'name' => $r->user->name ?? 'Deleted User',
             ])->values()->all(),
         ])->values()->all();
+
+        $sender = $message->sender;
 
         return [
             'id' => $message->id,
             'conversation_id' => $message->conversation_id,
             'sender_id' => $message->sender_id,
-            'sender' => $message->sender ? [
-                'id' => $message->sender->id,
-                'name' => $message->sender->name,
-                'avatar' => $message->sender->avatar ?? null,
-            ] : null,
+            'sender' => $sender ? [
+                'id' => $sender->id,
+                'name' => $sender->name,
+                'avatar' => $sender->avatar ?? null,
+            ] : [
+                'id' => 0,
+                'name' => 'Deleted User',
+                'avatar' => null,
+            ],
             'type' => $message->type,
-            'body' => $message->body,
-            'metadata' => $message->metadata,
+            'body' => $isDeleted ? null : $message->body,
+            'metadata' => $isDeleted ? null : $message->metadata,
             'parent_id' => $message->parent_id,
             'created_at' => $message->created_at->toISOString(),
             'reactions' => $reactions,
+            'deleted_for_everyone' => $isDeleted,
         ];
     }
 }

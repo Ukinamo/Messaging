@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, FolderGit2, LayoutGrid, MessageSquare } from 'lucide-vue-next';
+import { Archive, BookOpen, FolderGit2, LayoutGrid, MessageSquare, ShieldBan } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
@@ -32,6 +32,16 @@ const mainNavItems = computed<NavItem[]>(() => [
         href: '/chat',
         icon: MessageSquare,
         badge: chatUnreadCount.value,
+    },
+    {
+        title: 'Archived',
+        href: '/chat/archived',
+        icon: Archive,
+    },
+    {
+        title: 'Blocked',
+        href: '/chat/blocked',
+        icon: ShieldBan,
     },
 ]);
 </script>

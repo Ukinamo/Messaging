@@ -2,19 +2,12 @@
 import { cn } from '@/lib/utils';
 import type { ChatMessage, ReactionGroup } from '@/types';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
+    Ban,
     Check,
     CheckCheck,
     Download,
     FileText,
     Forward,
-    MoreVertical,
     SmilePlus,
     Trash2,
 } from 'lucide-vue-next';
@@ -37,6 +30,7 @@ const emit = defineEmits<{
 
 const showActions = ref(false);
 const showEmojiPicker = ref(false);
+const showDeleteOptions = ref(false);
 
 const quickEmojis = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 
@@ -69,17 +63,48 @@ function reactionTooltip(reaction: ReactionGroup): string {
 </script>
 
 <template>
+    <!-- Deleted message placeholder -->
     <div
+        v-if="message.deleted_for_everyone"
         :class="cn('group flex gap-2', isMine ? 'flex-row-reverse' : 'flex-row')"
-        @mouseenter="showActions = true"
-        @mouseleave="showActions = false; showEmojiPicker = false"
     >
         <div :class="cn('max-w-[75%] space-y-1', isMine ? 'items-end' : 'items-start')">
             <p
                 v-if="showSender && !isMine"
                 class="text-muted-foreground mb-0.5 px-1 text-xs font-medium"
             >
-                {{ message.sender?.name ?? 'Unknown' }}
+                {{ message.sender?.name ?? 'Deleted User' }}
+            </p>
+            <div
+                :class="cn(
+                    'inline-flex items-center gap-1.5 rounded-2xl border border-dashed px-3.5 py-2 text-sm italic',
+                    isMine
+                        ? 'border-primary/30 text-primary/60 rounded-br-md'
+                        : 'border-muted-foreground/30 text-muted-foreground rounded-bl-md',
+                )"
+            >
+                <Ban class="size-3.5 shrink-0" />
+                <span>This message was deleted</span>
+            </div>
+            <div :class="cn('flex items-center gap-1 px-1', isMine ? 'justify-end' : 'justify-start')">
+                <span class="text-muted-foreground text-[10px]">{{ formatTime(message.created_at) }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Normal message -->
+    <div
+        v-else
+        :class="cn('group flex gap-2', isMine ? 'flex-row-reverse' : 'flex-row')"
+        @mouseenter="showActions = true"
+        @mouseleave="showActions = false; showEmojiPicker = false; showDeleteOptions = false"
+    >
+        <div :class="cn('max-w-[75%] space-y-1', isMine ? 'items-end' : 'items-start')">
+            <p
+                v-if="showSender && !isMine"
+                class="text-muted-foreground mb-0.5 px-1 text-xs font-medium"
+            >
+                {{ message.sender?.name ?? 'Deleted User' }}
             </p>
 
             <!-- Image attachments -->
@@ -185,7 +210,7 @@ function reactionTooltip(reaction: ReactionGroup): string {
             v-show="showActions"
             :class="cn('flex items-center gap-0.5', isMine ? 'flex-row-reverse' : 'flex-row')"
         >
-            <!-- Quick emoji row -->
+            <!-- React -->
             <div class="relative">
                 <button
                     class="text-muted-foreground hover:text-foreground rounded p-1 transition-colors"
@@ -215,39 +240,46 @@ function reactionTooltip(reaction: ReactionGroup): string {
                 </div>
             </div>
 
-            <!-- More actions dropdown -->
-            <DropdownMenu>
-                <DropdownMenuTrigger as-child>
+            <!-- Forward -->
+            <button
+                class="text-muted-foreground hover:text-foreground rounded p-1 transition-colors"
+                title="Forward"
+                @click="emit('forward', message.id)"
+            >
+                <Forward class="size-3.5" />
+            </button>
+
+            <!-- Delete with inline options -->
+            <div class="relative flex items-center">
+                <button
+                    class="text-muted-foreground hover:text-destructive rounded p-1 transition-colors"
+                    title="Delete"
+                    @click="showDeleteOptions = !showDeleteOptions"
+                >
+                    <Trash2 class="size-3.5" />
+                </button>
+                <div
+                    v-if="showDeleteOptions"
+                    :class="cn(
+                        'bg-popover border-border absolute z-50 flex items-center gap-0.5 rounded-lg border px-1 py-0.5 shadow-lg whitespace-nowrap',
+                        isMine ? 'right-full mr-1' : 'left-full ml-1',
+                    )"
+                >
                     <button
-                        class="text-muted-foreground hover:text-foreground rounded p-1 transition-colors"
-                        title="More"
+                        class="text-destructive hover:bg-destructive/10 rounded px-2 py-1 text-[11px] font-medium transition-colors"
+                        @click="emit('deleteForMe', message.id); showDeleteOptions = false"
                     >
-                        <MoreVertical class="size-3.5" />
+                        For me
                     </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent :align="isMine ? 'end' : 'start'" class="w-48">
-                    <DropdownMenuItem @click="emit('forward', message.id)">
-                        <Forward class="mr-2 size-4" />
-                        Forward
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                        class="text-destructive focus:text-destructive"
-                        @click="emit('deleteForMe', message.id)"
-                    >
-                        <Trash2 class="mr-2 size-4" />
-                        Delete for me
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
+                    <button
                         v-if="isMine"
-                        class="text-destructive focus:text-destructive"
-                        @click="emit('deleteForEveryone', message.id)"
+                        class="text-destructive hover:bg-destructive/10 rounded px-2 py-1 text-[11px] font-medium transition-colors"
+                        @click="emit('deleteForEveryone', message.id); showDeleteOptions = false"
                     >
-                        <Trash2 class="mr-2 size-4" />
-                        Delete for everyone
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+                        For everyone
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 </template>

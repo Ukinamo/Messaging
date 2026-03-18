@@ -62,7 +62,16 @@ export function useChat(
                 handleTypingIndicator(e.user_id, e.user_name, e.is_typing);
             })
             .listen('MessageDeleted', (e: { message_id: number }) => {
-                messages.value = messages.value.filter((m) => m.id !== e.message_id);
+                const idx = messages.value.findIndex((m) => m.id === e.message_id);
+                if (idx !== -1) {
+                    messages.value[idx] = {
+                        ...messages.value[idx],
+                        deleted_for_everyone: true,
+                        body: null,
+                        metadata: null,
+                        reactions: [],
+                    };
+                }
             })
             .listen('MessageReacted', (e: { message_id: number; reactions: ReactionGroup[] }) => {
                 handleReactionUpdate(e.message_id, e.reactions);
@@ -267,7 +276,16 @@ export function useChat(
             await axios.delete(`/api/chat/messages/${messageId}`, {
                 data: { mode: 'for_everyone' },
             });
-            messages.value = messages.value.filter((m) => m.id !== messageId);
+            const idx = messages.value.findIndex((m) => m.id === messageId);
+            if (idx !== -1) {
+                messages.value[idx] = {
+                    ...messages.value[idx],
+                    deleted_for_everyone: true,
+                    body: null,
+                    metadata: null,
+                    reactions: [],
+                };
+            }
         } catch {
             // silent
         }
@@ -287,6 +305,46 @@ export function useChat(
             await axios.post(`/api/chat/messages/${messageId}/forward`, {
                 conversation_id: targetConversationId,
             });
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    async function archiveConversation(conversationId: number) {
+        try {
+            await axios.post(`/api/chat/conversations/${conversationId}/archive`);
+            conversations.value = conversations.value.filter((c) => c.id !== conversationId);
+            if (activeConversation.value?.id === conversationId) {
+                clearActiveConversation();
+            }
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    async function unarchiveConversation(conversationId: number) {
+        try {
+            await axios.delete(`/api/chat/conversations/${conversationId}/archive`);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    async function blockUser(userId: number) {
+        try {
+            await axios.post(`/api/chat/block/${userId}`);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    async function unblockUser(userId: number) {
+        try {
+            await axios.delete(`/api/chat/block/${userId}`);
             return true;
         } catch {
             return false;
@@ -384,6 +442,10 @@ export function useChat(
         deleteForEveryone,
         reactToMessage,
         forwardMessage,
+        archiveConversation,
+        unarchiveConversation,
+        blockUser,
+        unblockUser,
         createConversation,
         searchUsers,
         refreshConversations,

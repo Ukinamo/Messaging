@@ -34,14 +34,15 @@ export type ReactionGroup = {
 export type ChatMessage = {
     id: number;
     conversation_id: number;
-    sender_id: number;
-    sender: ChatParticipant;
+    sender_id: number | null;
+    sender: ChatParticipant | null;
     type: MessageType;
     body: string | null;
     metadata: MessageMetadata | null;
     parent_id: number | null;
     created_at: string;
     reactions: ReactionGroup[];
+    deleted_for_everyone?: boolean;
 };
 
 export type LatestMessage = {
@@ -70,9 +71,30 @@ export type ActiveConversation = {
     participants: ChatParticipant[];
     messages: ChatMessage[];
     last_read_by_others?: number;
+    is_archived?: boolean;
+    is_blocked?: boolean;
 };
 
 export type ChatPageProps = {
     conversations: ConversationSummary[];
     activeConversation?: ActiveConversation;
+};
+
+export type BlockedUserEntry = {
+    id: number;
+    user: {
+        id: number;
+        name: string;
+        email: string;
+        avatar: string | null;
+    };
+    created_at: string;
+};
+
+export type ArchivedConversationEntry = {
+    id: number;
+    type: ConversationType;
+    name: string;
+    avatar: string | null;
+    latest_message: LatestMessage | null;
 };
