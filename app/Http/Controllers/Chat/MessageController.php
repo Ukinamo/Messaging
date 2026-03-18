@@ -205,17 +205,20 @@ class MessageController extends Controller
 
         $existing = MessageReaction::where('message_id', $message->id)
             ->where('user_id', $user->id)
-            ->where('emoji', $validated['emoji'])
             ->first();
 
-        if ($existing) {
+        if ($existing && $existing->emoji === $validated['emoji']) {
             $existing->delete();
         } else {
-            MessageReaction::create([
-                'message_id' => $message->id,
-                'user_id' => $user->id,
-                'emoji' => $validated['emoji'],
-            ]);
+            if ($existing) {
+                $existing->update(['emoji' => $validated['emoji']]);
+            } else {
+                MessageReaction::create([
+                    'message_id' => $message->id,
+                    'user_id' => $user->id,
+                    'emoji' => $validated['emoji'],
+                ]);
+            }
         }
 
         $reactions = $this->getFormattedReactions($message);

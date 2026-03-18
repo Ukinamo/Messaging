@@ -10,6 +10,7 @@ import {
     Forward,
     SmilePlus,
     Trash2,
+    X,
 } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 
@@ -31,6 +32,8 @@ const emit = defineEmits<{
 const showActions = ref(false);
 const showEmojiPicker = ref(false);
 const showDeleteOptions = ref(false);
+const lightboxUrl = ref<string | null>(null);
+const lightboxName = ref('');
 
 const quickEmojis = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 
@@ -59,6 +62,33 @@ function hasUserReacted(reaction: ReactionGroup): boolean {
 
 function reactionTooltip(reaction: ReactionGroup): string {
     return reaction.users.map((u) => u.name).join(', ');
+}
+
+const myReactionEmoji = computed(() => {
+    if (!props.message.reactions) return null;
+    for (const r of props.message.reactions) {
+        if (r.users.some((u) => u.id === props.authUserId)) return r.emoji;
+    }
+    return null;
+});
+
+function openLightbox(url: string, name: string) {
+    lightboxUrl.value = url;
+    lightboxName.value = name;
+}
+
+function closeLightbox() {
+    lightboxUrl.value = null;
+}
+
+const urlRegex = /(https?:\/\/[^\s<]+)/g;
+
+function linkify(text: string): string {
+    const escaped = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    return escaped.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer" class="underline break-all hover:opacity-80">$1</a>');
 }
 </script>
 
@@ -114,14 +144,14 @@ function reactionTooltip(reaction: ReactionGroup): string {
                     :key="file.path"
                     class="overflow-hidden rounded-xl"
                 >
-                    <a :href="file.url" target="_blank" class="block">
+                    <button class="block cursor-zoom-in" @click="openLightbox(file.url, file.name)">
                         <img
                             :src="file.url"
                             :alt="file.name"
                             class="max-h-64 max-w-full rounded-xl object-cover"
                             loading="lazy"
                         />
-                    </a>
+                    </button>
                 </div>
             </div>
 
@@ -162,7 +192,7 @@ function reactionTooltip(reaction: ReactionGroup): string {
                     )
                 "
             >
-                <p class="whitespace-pre-wrap break-words">{{ message.body }}</p>
+                <p class="whitespace-pre-wrap wrap-break-word" v-html="linkify(message.body)" />
             </div>
 
             <!-- Reactions display -->
@@ -232,7 +262,10 @@ function reactionTooltip(reaction: ReactionGroup): string {
                     <button
                         v-for="emoji in quickEmojis"
                         :key="emoji"
-                        class="rounded px-1 py-0.5 text-base transition-transform hover:scale-125 hover:bg-muted"
+                        :class="cn(
+                            'rounded px-1 py-0.5 text-base transition-transform hover:scale-125',
+                            myReactionEmoji === emoji ? 'bg-primary/15 ring-primary/40 ring-1' : 'hover:bg-muted',
+                        )"
                         @click="emit('react', message.id, emoji); showEmojiPicker = false"
                     >
                         {{ emoji }}
@@ -282,4 +315,36 @@ function reactionTooltip(reaction: ReactionGroup): string {
             </div>
         </div>
     </div>
+
+    <!-- Image lightbox overlay -->
+    <Teleport to="body">
+        <div
+            v-if="lightboxUrl"
+            class="fixed inset-0 z-100 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+            @click.self="closeLightbox"
+        >
+            <div class="absolute right-4 top-4 flex items-center gap-2">
+                <a
+                    :href="lightboxUrl"
+                    :download="lightboxName"
+                    class="rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+                    title="Download"
+                >
+                    <Download class="size-5" />
+                </a>
+                <button
+                    class="rounded-full bg-white/10 p-2 text-white transition-colors hover:bg-white/20"
+                    title="Close"
+                    @click="closeLightbox"
+                >
+                    <X class="size-5" />
+                </button>
+            </div>
+            <img
+                :src="lightboxUrl"
+                :alt="lightboxName"
+                class="max-h-[90vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
+            />
+        </div>
+    </Teleport>
 </template>

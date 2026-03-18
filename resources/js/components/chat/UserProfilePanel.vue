@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { cn } from '@/lib/utils';
 import type { ActiveConversation, ChatParticipant } from '@/types';
-import { Archive, ArchiveRestore, ShieldBan, ShieldCheck, X } from 'lucide-vue-next';
+import { router } from '@inertiajs/vue3';
+import { Archive, ArchiveRestore, ExternalLink, ShieldBan, ShieldCheck, User, X } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import ChatAvatar from './ChatAvatar.vue';
 
@@ -74,6 +75,21 @@ function confirmBlock() {
 
             <!-- Actions -->
             <div class="space-y-1 px-3">
+                <!-- View Profile (private chats) -->
+                <button
+                    v-if="conversation.type === 'private' && otherUser"
+                    :class="
+                        cn(
+                            'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors',
+                            'hover:bg-muted text-foreground',
+                        )
+                    "
+                    @click="router.visit(`/chat/user/${otherUser.id}`)"
+                >
+                    <User class="size-4" />
+                    View profile
+                </button>
+
                 <!-- Archive / Unarchive -->
                 <button
                     :class="
@@ -140,10 +156,15 @@ function confirmBlock() {
                         Members
                     </h5>
                     <div class="space-y-0.5">
-                        <div
+                        <button
                             v-for="participant in conversation.participants"
                             :key="participant.id"
-                            class="flex items-center gap-3 rounded-lg px-3 py-2"
+                            :class="cn(
+                                'flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors',
+                                participant.id !== authUserId ? 'hover:bg-muted cursor-pointer' : '',
+                            )"
+                            :disabled="participant.id === authUserId"
+                            @click="participant.id !== authUserId && router.visit(`/chat/user/${participant.id}`)"
                         >
                             <ChatAvatar
                                 :name="participant.name"
@@ -157,7 +178,8 @@ function confirmBlock() {
                                     <span v-if="participant.id === authUserId" class="text-muted-foreground text-xs">(you)</span>
                                 </p>
                             </div>
-                        </div>
+                            <ExternalLink v-if="participant.id !== authUserId" class="text-muted-foreground size-3.5 shrink-0" />
+                        </button>
                     </div>
                 </div>
             </template>

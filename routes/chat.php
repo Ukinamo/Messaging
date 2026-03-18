@@ -3,6 +3,7 @@
 use App\Http\Controllers\Chat\BlockController;
 use App\Http\Controllers\Chat\ConversationController;
 use App\Http\Controllers\Chat\MessageController;
+use App\Http\Controllers\Chat\UserProfileController;
 use App\Http\Controllers\Chat\UserSearchController;
 use Illuminate\Support\Facades\Route;
 
@@ -10,6 +11,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/chat', [ConversationController::class, 'index'])->name('chat.index');
     Route::get('/chat/archived', [ConversationController::class, 'archivedIndex'])->name('chat.archived');
     Route::get('/chat/blocked', [BlockController::class, 'index'])->name('chat.blocked');
+    Route::get('/chat/user/{user}', [UserProfileController::class, 'show'])->name('chat.user.profile');
     Route::get('/chat/{conversation}', [ConversationController::class, 'show'])->name('chat.show');
 
     Route::prefix('api/chat')->group(function () {
