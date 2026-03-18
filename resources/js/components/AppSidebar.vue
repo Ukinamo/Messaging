@@ -1,0 +1,63 @@
+<script setup lang="ts">
+import { Link, usePage } from '@inertiajs/vue3';
+import { BookOpen, FolderGit2, LayoutGrid, MessageSquare } from 'lucide-vue-next';
+import { computed } from 'vue';
+import AppLogo from '@/components/AppLogo.vue';
+import NavFooter from '@/components/NavFooter.vue';
+import NavMain from '@/components/NavMain.vue';
+import NavUser from '@/components/NavUser.vue';
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+} from '@/components/ui/sidebar';
+import { dashboard } from '@/routes';
+import type { NavItem } from '@/types';
+
+const page = usePage();
+const chatUnreadCount = computed(() => (page.props.chatUnreadCount as number) ?? 0);
+
+const mainNavItems = computed<NavItem[]>(() => [
+    {
+        title: 'Dashboard',
+        href: dashboard(),
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Chat',
+        href: '/chat',
+        icon: MessageSquare,
+        badge: chatUnreadCount.value,
+    },
+]);
+</script>
+
+<template>
+    <Sidebar collapsible="icon" variant="inset">
+        <SidebarHeader>
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton size="lg" as-child>
+                        <Link :href="dashboard()">
+                            <AppLogo />
+                        </Link>
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        </SidebarHeader>
+
+        <SidebarContent>
+            <NavMain :items="mainNavItems" />
+        </SidebarContent>
+
+        <SidebarFooter>
+            <NavFooter :items="footerNavItems" />
+            <NavUser />
+        </SidebarFooter>
+    </Sidebar>
+    <slot />
+</template>
