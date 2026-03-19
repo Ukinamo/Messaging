@@ -3,6 +3,11 @@ set -e
 
 cd /app
 
+# Ensure storage directory structure exists (for Fly.io volume mount)
+mkdir -p /app/storage/framework/{sessions,views,cache}
+mkdir -p /app/storage/logs
+mkdir -p /app/storage/app/public
+
 # Create SQLite database if using sqlite
 if [ "$DB_CONNECTION" = "sqlite" ]; then
     touch /app/database/database.sqlite
