@@ -42,7 +42,7 @@ function previewText(conv: ConversationSummary): string {
     <button
         :class="
             cn(
-                'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors',
+                'flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors',
                 active
                     ? 'bg-accent text-accent-foreground'
                     : 'hover:bg-muted/50',
@@ -56,22 +56,23 @@ function previewText(conv: ConversationSummary): string {
             :online="online"
             show-status
             size="md"
+            class="mt-0.5 shrink-0"
         />
 
         <div class="min-w-0 flex-1">
             <div class="flex items-center justify-between gap-2">
-                <span class="truncate text-sm font-medium">
+                <span class="truncate text-sm font-semibold leading-tight">
                     {{ conversation.name || 'Chat' }}
                 </span>
                 <span
                     v-if="conversation.latest_message"
-                    class="text-muted-foreground shrink-0 text-xs"
+                    class="text-muted-foreground shrink-0 text-[11px]"
                 >
                     {{ formatTime(conversation.latest_message.created_at) }}
                 </span>
             </div>
-            <div class="flex items-center justify-between gap-2">
-                <p class="text-muted-foreground truncate text-xs">
+            <div class="mt-0.5 flex items-center justify-between gap-2">
+                <p class="text-muted-foreground truncate text-xs leading-snug">
                     <span v-if="conversation.type === 'group' && conversation.latest_message?.sender_name">
                         {{ conversation.latest_message.sender_name }}:
                     </span>
