@@ -103,7 +103,7 @@ defineExpose({ scrollToBottom });
 <template>
     <div
         ref="containerRef"
-        class="flex-1 overflow-y-auto px-4 py-3"
+        class="flex-1 overflow-y-auto px-4 py-4"
         @scroll="onScroll"
     >
         <div v-if="loadingMore" class="flex justify-center py-3">
@@ -111,15 +111,13 @@ defineExpose({ scrollToBottom });
         </div>
 
         <template v-for="group in groupedMessages" :key="group.date">
-            <div class="my-4 flex items-center gap-3">
-                <div class="bg-border h-px flex-1" />
-                <span class="text-muted-foreground text-xs font-medium">
+            <div class="my-5 flex justify-center">
+                <span class="bg-muted/80 text-muted-foreground rounded-full px-3 py-1 text-[11px] font-medium shadow-sm">
                     {{ formatDateLabel(group.messages[0].created_at) }}
                 </span>
-                <div class="bg-border h-px flex-1" />
             </div>
 
-            <div class="space-y-2">
+            <div class="space-y-1.5">
                 <MessageBubble
                     v-for="msg in group.messages"
                     :key="msg.id"
@@ -138,9 +136,10 @@ defineExpose({ scrollToBottom });
 
         <div
             v-if="messages.length === 0"
-            class="text-muted-foreground flex h-full items-center justify-center text-sm"
+            class="flex h-full flex-col items-center justify-center gap-1"
         >
-            No messages yet. Say hello!
+            <p class="text-muted-foreground text-sm">No messages yet</p>
+            <p class="text-muted-foreground/60 text-xs">Send a message to start the conversation</p>
         </div>
     </div>
 </template>

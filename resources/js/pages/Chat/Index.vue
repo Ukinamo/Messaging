@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { cn } from '@/lib/utils';
+import { useCall } from '@/composables/useCall';
 import { useChat } from '@/composables/useChat';
-import type { ChatPageProps } from '@/types';
+import type { CallData, ChatPageProps } from '@/types';
 import { MessageSquare } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import CallOverlay from '@/components/chat/CallOverlay.vue';
 import ChatHeader from '@/components/chat/ChatHeader.vue';
 import ConversationList from '@/components/chat/ConversationList.vue';
 import ForwardMessageDialog from '@/components/chat/ForwardMessageDialog.vue';
@@ -17,6 +19,10 @@ import UserProfilePanel from '@/components/chat/UserProfilePanel.vue';
 const props = defineProps<ChatPageProps>();
 
 const breadcrumbs = [{ title: 'Chat', href: '/chat' }];
+
+function onIncomingCall(data: CallData) {
+    handleIncomingCall(data);
+}
 
 const {
     authUserId,
@@ -44,7 +50,26 @@ const {
     refreshConversations,
     joinConversationChannel,
     markAsRead,
-} = useChat(props.conversations, props.activeConversation);
+} = useChat(props.conversations, props.activeConversation, onIncomingCall);
+
+const {
+    callState,
+    callDuration,
+    isMuted,
+    error: callError,
+    otherParticipant: callOtherParticipant,
+    initiateCall,
+    handleIncomingCall,
+    answerCall,
+    rejectCall,
+    endCall,
+    toggleMute,
+} = useCall(() => authUserId.value);
+
+function handleCallClick() {
+    if (!activeConversation.value) return;
+    initiateCall(activeConversation.value.id);
+}
 
 const showNewChatDialog = ref(false);
 const showForwardDialog = ref(false);
@@ -148,12 +173,12 @@ async function handleUnblock(userId: number) {
     <Head title="Chat" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-[calc(100vh-4rem)] overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
+        <div class="flex h-[calc(100vh-4rem)] overflow-hidden rounded-xl border border-sidebar-border/70 shadow-sm dark:border-sidebar-border">
             <!-- Conversation list panel -->
             <div
                 :class="
                     cn(
-                        'bg-background w-full shrink-0 border-r md:w-80 lg:w-96',
+                        'bg-background/50 w-full shrink-0 border-r md:w-80 lg:w-96',
                         mobileShowThread ? 'hidden md:block' : 'block',
                     )
                 "
@@ -184,6 +209,7 @@ async function handleUnblock(userId: number) {
                         :typing-names="typingNames"
                         @back="handleBack"
                         @open-profile="showProfilePanel = !showProfilePanel"
+                        @call="handleCallClick"
                     />
 
                     <MessageThread
@@ -213,16 +239,18 @@ async function handleUnblock(userId: number) {
                 </div>
 
                 <!-- Empty state -->
-                <div v-else class="flex flex-1 flex-col items-center justify-center gap-3 p-8">
-                    <div class="bg-muted flex size-16 items-center justify-center rounded-full">
-                        <MessageSquare class="text-muted-foreground size-8" />
+                <div v-else class="flex flex-1 flex-col items-center justify-center gap-4 p-8">
+                    <div class="bg-muted/50 flex size-20 items-center justify-center rounded-full">
+                        <MessageSquare class="text-muted-foreground/60 size-9" />
                     </div>
-                    <h3 class="text-lg font-semibold">Your Messages</h3>
-                    <p class="text-muted-foreground max-w-sm text-center text-sm">
-                        Select a conversation from the list or start a new one to begin chatting.
-                    </p>
+                    <div class="text-center">
+                        <h3 class="text-lg font-semibold">Your Messages</h3>
+                        <p class="text-muted-foreground mt-1 max-w-xs text-sm leading-relaxed">
+                            Select a conversation from the list or start a new one to begin chatting.
+                        </p>
+                    </div>
                     <button
-                        class="bg-primary text-primary-foreground hover:bg-primary/90 mt-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+                        class="bg-primary text-primary-foreground hover:bg-primary/90 mt-1 rounded-full px-5 py-2.5 text-sm font-medium shadow-sm transition-all hover:shadow-md"
                         @click="showNewChatDialog = true"
                     >
                         Start a Conversation
@@ -257,6 +285,18 @@ async function handleUnblock(userId: number) {
             :active-conversation-id="activeConversation?.id"
             @update:open="showForwardDialog = $event"
             @select="handleForwardSelect"
+        />
+
+        <CallOverlay
+            :state="callState"
+            :other-participant="callOtherParticipant"
+            :duration="callDuration"
+            :muted="isMuted"
+            :error="callError"
+            @answer="answerCall"
+            @reject="rejectCall"
+            @end="endCall"
+            @toggle-mute="toggleMute"
         />
     </AppLayout>
 </template>

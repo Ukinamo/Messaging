@@ -66,13 +66,13 @@ const canSend = computed(() => body.value.trim().length > 0 || attachments.value
 </script>
 
 <template>
-    <div class="border-t px-4 pb-3 pt-2">
+    <div class="border-t px-4 pb-4 pt-3">
         <!-- Attachment preview strip -->
-        <div v-if="previews.length > 0" class="mb-2 flex gap-2 overflow-x-auto pb-1">
+        <div v-if="previews.length > 0" class="mb-3 flex gap-2 overflow-x-auto pb-1">
             <div
                 v-for="(preview, idx) in previews"
                 :key="idx"
-                class="bg-muted relative shrink-0 overflow-hidden rounded-lg"
+                class="bg-muted relative shrink-0 overflow-hidden rounded-xl"
             >
                 <img
                     v-if="preview.isImage && preview.url"
@@ -80,11 +80,11 @@ const canSend = computed(() => body.value.trim().length > 0 || attachments.value
                     :alt="preview.name"
                     class="size-16 object-cover"
                 />
-                <div v-else class="flex size-16 items-center justify-center p-1">
+                <div v-else class="flex size-16 items-center justify-center p-1.5">
                     <span class="text-muted-foreground truncate text-[10px]">{{ preview.name }}</span>
                 </div>
                 <button
-                    class="bg-foreground/70 text-background absolute top-0.5 right-0.5 rounded-full p-0.5"
+                    class="bg-foreground/70 text-background absolute top-1 right-1 rounded-full p-0.5 transition-transform hover:scale-110"
                     @click="removeAttachment(idx)"
                 >
                     <X class="size-3" />
@@ -103,20 +103,20 @@ const canSend = computed(() => body.value.trim().length > 0 || attachments.value
             />
 
             <button
-                class="text-muted-foreground hover:text-foreground mb-1.5 transition-colors"
+                class="text-muted-foreground hover:text-foreground mb-2 flex size-9 items-center justify-center rounded-full transition-colors hover:bg-muted"
                 title="Attach file"
                 @click="fileInputRef?.click()"
             >
-                <Paperclip class="size-5" />
+                <Paperclip class="size-[18px]" />
             </button>
 
-            <div class="bg-muted flex-1 rounded-2xl px-3 py-1.5">
+            <div class="bg-muted/60 min-h-[42px] flex-1 rounded-2xl px-4 py-2.5 ring-1 ring-transparent transition-all focus-within:bg-muted focus-within:ring-border/50">
                 <textarea
                     ref="textareaRef"
                     v-model="body"
                     rows="1"
                     placeholder="Type a message..."
-                    class="block w-full resize-none bg-transparent text-sm leading-relaxed outline-none placeholder:text-muted-foreground"
+                    class="block w-full resize-none bg-transparent text-sm leading-relaxed outline-none placeholder:text-muted-foreground/70"
                     @keydown="handleKeydown"
                     @input="handleInput"
                 />
@@ -125,10 +125,10 @@ const canSend = computed(() => body.value.trim().length > 0 || attachments.value
             <button
                 :class="
                     cn(
-                        'mb-1 flex size-8 items-center justify-center rounded-full transition-colors',
+                        'mb-1.5 flex size-9 items-center justify-center rounded-full transition-all duration-200',
                         canSend
-                            ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                            : 'text-muted-foreground bg-muted',
+                            ? 'bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md'
+                            : 'text-muted-foreground/50 bg-muted/60',
                     )
                 "
                 :disabled="!canSend"

@@ -51,7 +51,13 @@ class Conversation extends Model
             return null;
         }
 
-        return $this->activeParticipants->firstWhere('id', '!=', $userId);
+        $other = $this->activeParticipants->firstWhere('id', '!=', $userId);
+
+        if (!$other && $this->activeParticipants->count() === 1) {
+            return $this->activeParticipants->first();
+        }
+
+        return $other;
     }
 
     public function unreadCountFor(int $userId): int

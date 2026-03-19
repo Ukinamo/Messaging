@@ -25,8 +25,7 @@ class UserSearchController extends Controller
                 BlockedUser::where('blocked_user_id', $authId)->pluck('user_id')
             );
 
-        $users = User::where('id', '!=', $authId)
-            ->whereNotIn('id', $blockedIds)
+        $users = User::whereNotIn('id', $blockedIds)
             ->where(function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
                     ->orWhere('email', 'like', "%{$query}%");

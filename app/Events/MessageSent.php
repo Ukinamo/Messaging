@@ -3,6 +3,7 @@
 namespace App\Events;
 
 use App\Models\Message;
+use App\Models\Conversation;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -21,8 +22,19 @@ class MessageSent implements ShouldBroadcastNow
 
     public function broadcastOn(): array
     {
+        $conversation = Conversation::select('id')->find($this->message->conversation_id);
+
+        $userChannels = [];
+        if ($conversation) {
+            $participantIds = $conversation->activeParticipants()->pluck('users.id');
+            $userChannels = $participantIds
+                ->map(fn (int $id) => new PrivateChannel('user.'.$id))
+                ->all();
+        }
+
         return [
             new PrivateChannel('conversation.'.$this->message->conversation_id),
+            ...$userChannels,
         ];
     }
 

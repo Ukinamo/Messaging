@@ -1,12 +1,15 @@
 import echo from '@/echo';
-import type { ActiveConversation, ChatMessage, ConversationSummary, ReactionGroup } from '@/types';
+import type { ActiveConversation, CallData, ChatMessage, ConversationSummary, ReactionGroup } from '@/types';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 
+export type CallInitiatedHandler = (data: CallData) => void;
+
 export function useChat(
     initialConversations: ConversationSummary[],
     initialActive?: ActiveConversation,
+    onCallInitiated?: CallInitiatedHandler,
 ) {
     const page = usePage();
     const authUserId = computed(() => page.props.auth.user.id);
@@ -24,6 +27,7 @@ export function useChat(
     const readByOthersUpToId = ref<number>(initialActive?.last_read_by_others ?? 0);
 
     let currentChannelName: string | null = null;
+    const userChannelName = computed(() => `user.${authUserId.value}`);
 
     function joinPresence() {
         echo.join('presence-chat')
@@ -42,6 +46,20 @@ export function useChat(
 
     function leavePresence() {
         echo.leave('presence-chat');
+    }
+
+    function joinUserChannel() {
+        echo.private(userChannelName.value).listen('MessageSent', (e: { message: ChatMessage }) => {
+            // If the active conversation is the same, the conversation channel will handle it.
+            // This ensures sidebar/unread updates even when user isn't inside the conversation.
+            if (activeConversation.value?.id !== e.message.conversation_id) {
+                updateConversationPreview(e.message);
+            }
+        });
+    }
+
+    function leaveUserChannel() {
+        echo.leave(userChannelName.value);
     }
 
     function joinConversationChannel(conversationId: number) {
@@ -75,6 +93,11 @@ export function useChat(
             })
             .listen('MessageReacted', (e: { message_id: number; reactions: ReactionGroup[] }) => {
                 handleReactionUpdate(e.message_id, e.reactions);
+            })
+            .listen('CallInitiated', (e: { call: CallData }) => {
+                if (onCallInitiated && e.call.caller.id !== authUserId.value) {
+                    onCallInitiated(e.call);
+                }
             });
     }
 
@@ -406,9 +429,11 @@ export function useChat(
     );
 
     joinPresence();
+    joinUserChannel();
 
     onBeforeUnmount(() => {
         leavePresence();
+        leaveUserChannel();
         leaveConversationChannel();
     });
 

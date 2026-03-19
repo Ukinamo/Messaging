@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ActiveConversation } from '@/types';
-import { ArrowLeft, Phone, Video } from 'lucide-vue-next';
+import { ArrowLeft, Phone } from 'lucide-vue-next';
 import ChatAvatar from './ChatAvatar.vue';
 
 const props = defineProps<{
@@ -12,13 +12,14 @@ const props = defineProps<{
 defineEmits<{
     back: [];
     openProfile: [];
+    call: [];
 }>();
 </script>
 
 <template>
-    <div class="flex items-center gap-3 border-b px-4 py-3">
+    <div class="bg-background/80 flex items-center gap-3 border-b px-4 py-2.5 backdrop-blur-sm">
         <button
-            class="text-muted-foreground hover:text-foreground -ml-1 rounded-md p-1 transition-colors md:hidden"
+            class="text-muted-foreground hover:text-foreground hover:bg-accent -ml-1 flex size-8 items-center justify-center rounded-full transition-colors md:hidden"
             @click="$emit('back')"
         >
             <ArrowLeft class="size-5" />
@@ -36,12 +37,12 @@ defineEmits<{
             />
 
             <div class="min-w-0 flex-1">
-                <h3 class="truncate text-sm font-semibold">{{ conversation.name || 'Chat' }}</h3>
-                <p v-if="typingNames.length > 0" class="text-primary animate-pulse text-xs">
+                <h3 class="truncate text-[13px] font-semibold leading-tight">{{ conversation.name || 'Chat' }}</h3>
+                <p v-if="typingNames.length > 0" class="text-primary mt-0.5 text-xs font-medium">
                     <template v-if="typingNames.length === 1">{{ typingNames[0] }} is typing...</template>
                     <template v-else>{{ typingNames.length }} people are typing...</template>
                 </p>
-                <p v-else class="text-xs">
+                <p v-else class="mt-0.5 text-xs">
                     <span v-if="online" class="inline-flex items-center gap-1 text-emerald-500">
                         <span class="inline-block size-1.5 rounded-full bg-emerald-500" />
                         Online
@@ -54,13 +55,13 @@ defineEmits<{
             </div>
         </button>
 
-        <div class="flex items-center gap-1">
-            <button class="text-muted-foreground hover:text-foreground rounded-md p-2 transition-colors hover:bg-muted">
-                <Phone class="size-4" />
-            </button>
-            <button class="text-muted-foreground hover:text-foreground rounded-md p-2 transition-colors hover:bg-muted">
-                <Video class="size-4" />
-            </button>
-        </div>
+        <button
+            v-if="conversation.type === 'private'"
+            class="text-muted-foreground hover:text-foreground hover:bg-accent flex size-9 items-center justify-center rounded-full transition-colors"
+            title="Voice call"
+            @click="$emit('call')"
+        >
+            <Phone class="size-[18px]" />
+        </button>
     </div>
 </template>

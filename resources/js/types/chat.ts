@@ -91,6 +91,18 @@ export type BlockedUserEntry = {
     created_at: string;
 };
 
+export type CallStatus = 'ringing' | 'active' | 'ended' | 'missed' | 'rejected';
+
+export type CallData = {
+    id: number;
+    conversation_id: number;
+    caller: ChatParticipant;
+    receiver: ChatParticipant;
+    status: CallStatus;
+};
+
+export type CallState = 'idle' | 'outgoing' | 'incoming' | 'active';
+
 export type ArchivedConversationEntry = {
     id: number;
     type: ConversationType;

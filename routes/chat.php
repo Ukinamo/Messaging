@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Chat\BlockController;
+use App\Http\Controllers\Chat\CallController;
 use App\Http\Controllers\Chat\ConversationController;
 use App\Http\Controllers\Chat\MessageController;
 use App\Http\Controllers\Chat\UserProfileController;
@@ -35,5 +36,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/block/{user}', [BlockController::class, 'destroy'])->name('api.chat.block.destroy');
 
         Route::get('/users/search', UserSearchController::class)->name('api.chat.users.search');
+        Route::get('/users/{user}/profile', [UserProfileController::class, 'api'])->name('api.chat.users.profile');
+
+        Route::post('/conversations/{conversation}/call', [CallController::class, 'initiate'])->name('api.chat.call.initiate');
+        Route::post('/calls/{call}/answer', [CallController::class, 'answer'])->name('api.chat.call.answer');
+        Route::post('/calls/{call}/reject', [CallController::class, 'reject'])->name('api.chat.call.reject');
+        Route::post('/calls/{call}/end', [CallController::class, 'end'])->name('api.chat.call.end');
+        Route::post('/calls/{call}/signal', [CallController::class, 'signal'])->name('api.chat.call.signal');
     });
 });

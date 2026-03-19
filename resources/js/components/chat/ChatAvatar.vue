@@ -23,7 +23,7 @@ function initials(name: string): string {
 const sizeClasses = {
     sm: 'size-8 text-xs',
     md: 'size-10 text-sm',
-    lg: 'size-12 text-base',
+    lg: 'size-14 text-lg',
 };
 </script>
 

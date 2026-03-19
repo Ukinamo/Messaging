@@ -44,8 +44,10 @@ class ConversationController extends Controller
         $displayAvatar = $conversation->avatar;
 
         if ($conversation->type === 'private') {
-            $other = $participants->firstWhere('id', '!=', $request->user()->id);
-            $displayName = $other?->name ?? 'Deleted User';
+            $other = $participants->firstWhere('id', '!=', $request->user()->id)
+                ?? $participants->firstWhere('id', $request->user()->id);
+            $isSelfChat = $other && $other->id === $request->user()->id;
+            $displayName = $isSelfChat ? ($other->name . ' (You)') : ($other?->name ?? 'Deleted User');
             $displayAvatar = $other?->avatar;
         }
 
@@ -58,13 +60,11 @@ class ConversationController extends Controller
             ->where('conversation_id', $conversation->id)
             ->exists();
 
-        $otherUserId = null;
         $isBlocked = false;
-        if ($conversation->type === 'private') {
-            $other = $participants->firstWhere('id', '!=', $request->user()->id);
-            $otherUserId = $other?->id;
-            if ($otherUserId) {
-                $isBlocked = $request->user()->hasBlocked($otherUserId);
+        if ($conversation->type === 'private' && !($isSelfChat ?? false)) {
+            $otherForBlock = $participants->firstWhere('id', '!=', $request->user()->id);
+            if ($otherForBlock) {
+                $isBlocked = $request->user()->hasBlocked($otherForBlock->id);
             }
         }
 
@@ -93,24 +93,45 @@ class ConversationController extends Controller
         $authUser = $request->user();
         $targetUserId = (int) $validated['user_id'];
 
-        if ($authUser->id === $targetUserId) {
-            return response()->json(['error' => 'Cannot create conversation with yourself.'], 422);
+        $isSelfChat = $authUser->id === $targetUserId;
+
+        if ($isSelfChat) {
+            $candidates = Conversation::where('type', 'private')
+                ->whereHas('activeParticipants', fn ($q) => $q->where('user_id', $authUser->id))
+                ->withCount('activeParticipants')
+                ->get()
+                ->where('active_participants_count', 1);
+
+            $archivedIds = ArchivedConversation::where('user_id', $authUser->id)->pluck('conversation_id');
+            $existing = $candidates->whereNotIn('id', $archivedIds)->first()
+                ?? $candidates->first();
+        } else {
+            $existing = Conversation::where('type', 'private')
+                ->whereHas('activeParticipants', fn ($q) => $q->where('user_id', $authUser->id))
+                ->whereHas('activeParticipants', fn ($q) => $q->where('user_id', $targetUserId))
+                ->first();
         }
 
-        $existing = Conversation::where('type', 'private')
-            ->whereHas('activeParticipants', fn ($q) => $q->where('user_id', $authUser->id))
-            ->whereHas('activeParticipants', fn ($q) => $q->where('user_id', $targetUserId))
-            ->first();
-
         if ($existing) {
+            ArchivedConversation::where('user_id', $authUser->id)
+                ->where('conversation_id', $existing->id)
+                ->delete();
+
             return response()->json(['conversation_id' => $existing->id]);
         }
 
         $conversation = Conversation::create(['type' => 'private']);
-        $conversation->participants()->attach([
-            $authUser->id => ['role' => 'member', 'joined_at' => now()],
-            $targetUserId => ['role' => 'member', 'joined_at' => now()],
-        ]);
+
+        if ($isSelfChat) {
+            $conversation->participants()->attach([
+                $authUser->id => ['role' => 'member', 'joined_at' => now()],
+            ]);
+        } else {
+            $conversation->participants()->attach([
+                $authUser->id => ['role' => 'member', 'joined_at' => now()],
+                $targetUserId => ['role' => 'member', 'joined_at' => now()],
+            ]);
+        }
 
         return response()->json(['conversation_id' => $conversation->id], 201);
     }
@@ -168,6 +189,7 @@ class ConversationController extends Controller
 
         return $conversations->map(function ($conversation) use ($user) {
             $other = $conversation->getOtherParticipant($user->id);
+            $isSelfChat = $other && $other->id === $user->id;
             $participant = $conversation->activeParticipants->firstWhere('id', $user->id);
             $lastReadId = $participant?->pivot?->last_read_message_id ?? 0;
 
@@ -176,11 +198,15 @@ class ConversationController extends Controller
                 ->where('sender_id', '!=', $user->id)
                 ->count();
 
+            $privateName = $isSelfChat
+                ? ($other->name . ' (You)')
+                : ($other?->name ?? 'Deleted User');
+
             return [
                 'id' => $conversation->id,
                 'type' => $conversation->type,
                 'name' => $conversation->type === 'private'
-                    ? $other?->name ?? 'Deleted User'
+                    ? $privateName
                     : $conversation->name,
                 'avatar' => $conversation->type === 'private'
                     ? $other?->avatar
@@ -221,12 +247,17 @@ class ConversationController extends Controller
 
         $formatted = $conversations->map(function ($conversation) use ($user) {
             $other = $conversation->getOtherParticipant($user->id);
+            $isSelfChat = $other && $other->id === $user->id;
+
+            $privateName = $isSelfChat
+                ? ($other->name . ' (You)')
+                : ($other?->name ?? 'Deleted User');
 
             return [
                 'id' => $conversation->id,
                 'type' => $conversation->type,
                 'name' => $conversation->type === 'private'
-                    ? $other?->name ?? 'Deleted User'
+                    ? $privateName
                     : $conversation->name,
                 'avatar' => $conversation->type === 'private'
                     ? $other?->avatar
