@@ -1,9 +1,10 @@
-import { createInertiaApp } from '@inertiajs/vue3';
+import { createInertiaApp, router } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import '../css/app.css';
 import { initializeTheme } from '@/composables/useAppearance';
+import { startPresenceChannel } from '@/composables/usePresence';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -18,6 +19,20 @@ createInertiaApp({
         createApp({ render: () => h(App, props) })
             .use(plugin)
             .mount(el);
+
+        const user = (props as { initialPage?: { props?: { auth?: { user?: unknown } } } }).initialPage?.props?.auth?.user;
+
+        if (user) {
+            startPresenceChannel();
+        }
+
+        router.on('success', (event) => {
+            const pageUser = (event.detail.page.props as { auth?: { user?: unknown } }).auth?.user;
+
+            if (pageUser) {
+                startPresenceChannel();
+            }
+        });
     },
     progress: {
         color: '#4B5563',

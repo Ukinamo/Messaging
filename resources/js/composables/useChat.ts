@@ -1,4 +1,5 @@
 import echo from '@/echo';
+import { usePresence } from '@/composables/usePresence';
 import type { ActiveConversation, CallData, ChatMessage, ConversationSummary, ReactionGroup } from '@/types';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
@@ -22,31 +23,12 @@ export function useChat(
     const loadingMore = ref(false);
     const hasMore = ref(true);
     const typingUsers = ref<Map<number, { name: string; timeout: ReturnType<typeof setTimeout> }>>(new Map());
-    const onlineUserIds = ref<Set<number>>(new Set());
+    const { onlineUserIds } = usePresence();
 
     const readByOthersUpToId = ref<number>(initialActive?.last_read_by_others ?? 0);
 
     let currentChannelName: string | null = null;
     const userChannelName = computed(() => `user.${authUserId.value}`);
-
-    function joinPresence() {
-        echo.join('presence-chat')
-            .here((users: Array<{ id: number }>) => {
-                onlineUserIds.value = new Set(users.map((u) => u.id));
-            })
-            .joining((user: { id: number }) => {
-                onlineUserIds.value.add(user.id);
-                onlineUserIds.value = new Set(onlineUserIds.value);
-            })
-            .leaving((user: { id: number }) => {
-                onlineUserIds.value.delete(user.id);
-                onlineUserIds.value = new Set(onlineUserIds.value);
-            });
-    }
-
-    function leavePresence() {
-        echo.leave('presence-chat');
-    }
 
     function joinUserChannel() {
         echo.private(userChannelName.value).listen('MessageSent', (e: { message: ChatMessage }) => {
@@ -428,11 +410,9 @@ export function useChat(
         { immediate: true },
     );
 
-    joinPresence();
     joinUserChannel();
 
     onBeforeUnmount(() => {
-        leavePresence();
         leaveUserChannel();
         leaveConversationChannel();
     });

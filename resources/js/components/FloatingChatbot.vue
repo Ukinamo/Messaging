@@ -140,6 +140,10 @@ function scrollToBottom() {
 }
 
 async function send() {
+    if (isSending.value) {
+        return;
+    }
+
     const text = input.value.trim();
 
     if (!text) {
@@ -166,7 +170,7 @@ async function send() {
         .slice(-12)
         .map((m) => ({ role: m.role, content: m.content }));
 
-    const doRequest = async (retryCount = 0): Promise<void> => {
+    const doRequest = async (): Promise<void> => {
         try {
             const { data } = await axios.post('/api/chat/assistant', { messages: history });
             const reply = data?.message?.content;
@@ -189,32 +193,11 @@ async function send() {
             const msg = res?.data?.message ?? 'AI is unavailable. Check GEMINI_API_KEY in .env and try again.';
 
             const isRateLimit = res?.status === 429 || /quota|rate limit|retry in/i.test(msg);
-            const canRetry = isRateLimit && retryCount === 0;
-
-            if (canRetry) {
-                const retryMatch = msg.match(/retry in (\d+(?:\.\d+)?)\s*s/i);
-                const secs = retryMatch ? Math.ceil(Number(retryMatch[1])) : 45;
-                const waitSecs = Math.min(secs, 60);
-
-                errorText.value = `Rate limited. Retrying in ${waitSecs} seconds…`;
-                let left = waitSecs;
-                const tick = setInterval(() => {
-                    left -= 1;
-
-                    if (left <= 0) {
-                        clearInterval(tick);
-                        errorText.value = null;
-                        void doRequest(1);
-                    } else {
-                        errorText.value = `Rate limited. Retrying in ${left} seconds…`;
-                    }
-                }, 1000);
-
-                return;
-            }
 
             if (isRateLimit) {
-                errorText.value = 'Rate limit reached. Please wait a minute and try again.';
+                const retryMatch = msg.match(/retry in (\d+(?:\.\d+)?)\s*s/i);
+                const secs = retryMatch ? Math.ceil(Number(retryMatch[1])) : 60;
+                errorText.value = `Rate limit reached. Please wait about ${Math.min(secs, 60)} seconds, then send again.`;
             } else {
                 errorText.value = msg;
             }
@@ -228,6 +211,10 @@ async function send() {
 }
 
 function onKeydown(e: KeyboardEvent) {
+    if (isSending.value) {
+        return;
+    }
+
     if (e.key === 'Escape' && isOpen.value) {
         isOpen.value = false;
     }

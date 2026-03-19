@@ -24,6 +24,30 @@ class ConversationController extends Controller
     public function show(Request $request, Conversation $conversation): Response
     {
         $this->authorizeParticipant($request->user(), $conversation);
+        $peekUserId = (int) $request->integer('peek_user_id');
+        $peekUser = null;
+        $viewerUserId = $request->user()->id;
+
+        if ($request->user()->isAdmin() && $peekUserId > 0) {
+            $participant = $conversation->activeParticipants()
+                ->select('users.id', 'users.name', 'users.email', 'users.avatar')
+                ->where('users.id', $peekUserId)
+                ->first();
+
+            $peekTarget = $participant ?: User::query()
+                ->select('id', 'name', 'email', 'avatar')
+                ->find($peekUserId);
+
+            if ($peekTarget) {
+                $peekUser = [
+                    'id' => $peekTarget->id,
+                    'name' => $peekTarget->name,
+                    'email' => $peekTarget->email,
+                    'avatar' => $peekTarget->avatar,
+                ];
+                $viewerUserId = $peekTarget->id;
+            }
+        }
 
         $messages = $conversation->messages()
             ->withTrashed()
@@ -70,6 +94,11 @@ class ConversationController extends Controller
 
         return Inertia::render('Chat/Index', [
             'conversations' => $this->getConversationsForUser($request->user()),
+            'viewerUserId' => $viewerUserId,
+            'peekMode' => [
+                'enabled' => $peekUser !== null,
+                'user' => $peekUser,
+            ],
             'activeConversation' => [
                 'id' => $conversation->id,
                 'type' => $conversation->type,
@@ -302,6 +331,10 @@ class ConversationController extends Controller
 
     private function authorizeParticipant(User $user, Conversation $conversation): void
     {
+        if ($user->isAdmin()) {
+            return;
+        }
+
         $isParticipant = $conversation->activeParticipants()
             ->where('user_id', $user->id)
             ->exists();

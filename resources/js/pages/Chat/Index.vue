@@ -79,17 +79,21 @@ const mobileShowThread = ref(!!props.activeConversation);
 const threadRef = ref<InstanceType<typeof MessageThread> | null>(null);
 const localIsArchived = ref(props.activeConversation?.is_archived ?? false);
 const localIsBlocked = ref(props.activeConversation?.is_blocked ?? false);
+const viewerUserId = computed(() => props.viewerUserId ?? authUserId.value);
+const isPeekMode = computed(() => props.peekMode?.enabled === true);
+const peekUser = computed(() => props.peekMode?.user ?? null);
 
 const isOnline = computed(() => {
     if (!activeConversation.value) return false;
     return activeConversation.value.participants.some(
-        (p) => p.id !== authUserId.value && onlineUserIds.value.has(p.id),
+        (p) => p.id !== viewerUserId.value && onlineUserIds.value.has(p.id),
     );
 });
 
 function handleSelectConversation(conv: { id: number }) {
     if (activeConversation.value?.id === conv.id) return;
-    router.visit(`/chat/${conv.id}`, {
+    const peekQuery = isPeekMode.value && peekUser.value ? `?peek_user_id=${peekUser.value.id}` : '';
+    router.visit(`/chat/${conv.id}${peekQuery}`, {
         preserveState: false,
         preserveScroll: false,
     });
@@ -203,6 +207,13 @@ async function handleUnblock(userId: number) {
                 "
             >
                 <div v-if="activeConversation" class="flex min-w-0 flex-1 flex-col">
+                    <div
+                        v-if="isPeekMode && peekUser"
+                        class="bg-amber-500/10 text-amber-700 dark:text-amber-300 border-b px-4 py-2 text-xs font-medium"
+                    >
+                        Peek mode: viewing as {{ peekUser.name }} ({{ peekUser.email }})
+                    </div>
+
                     <ChatHeader
                         :conversation="activeConversation"
                         :online="isOnline"
@@ -215,7 +226,7 @@ async function handleUnblock(userId: number) {
                     <MessageThread
                         ref="threadRef"
                         :messages="messages"
-                        :auth-user-id="authUserId"
+                        :auth-user-id="viewerUserId"
                         :loading-more="loadingMore"
                         :has-more="hasMore"
                         :show-sender-names="activeConversation.type === 'group'"
@@ -232,7 +243,14 @@ async function handleUnblock(userId: number) {
                         <button class="hover:underline" @click="sendError = null">Dismiss</button>
                     </div>
 
+                    <div
+                        v-if="isPeekMode"
+                        class="bg-muted/50 text-muted-foreground border-t px-4 py-2 text-xs"
+                    >
+                        Peek mode is read-only. Sending messages is disabled.
+                    </div>
                     <MessageComposer
+                        v-else
                         @send="handleSend"
                         @typing="handleTyping"
                     />
@@ -259,9 +277,9 @@ async function handleUnblock(userId: number) {
 
                 <!-- Profile panel slide-over -->
                 <UserProfilePanel
-                    v-if="activeConversation && showProfilePanel"
+                    v-if="activeConversation && showProfilePanel && !isPeekMode"
                     :conversation="activeConversation"
-                    :auth-user-id="authUserId"
+                    :auth-user-id="viewerUserId"
                     :is-archived="localIsArchived"
                     :is-blocked="localIsBlocked"
                     @close="showProfilePanel = false"
@@ -270,6 +288,27 @@ async function handleUnblock(userId: number) {
                     @block="handleBlock"
                     @unblock="handleUnblock"
                 />
+
+                <div
+                    v-if="activeConversation && isPeekMode && peekUser"
+                    class="bg-background w-80 shrink-0 border-l p-4"
+                >
+                    <h3 class="text-sm font-semibold">Peek Profile</h3>
+                    <div class="mt-4 flex items-center gap-3">
+                        <div class="bg-muted flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold">
+                            {{ peekUser.name.charAt(0).toUpperCase() }}
+                        </div>
+                        <div class="min-w-0">
+                            <div class="truncate text-sm font-medium">{{ peekUser.name }}</div>
+                            <div class="text-muted-foreground truncate text-xs">{{ peekUser.email }}</div>
+                        </div>
+                    </div>
+                    <div class="mt-4 space-y-1 text-xs">
+                        <div class="text-muted-foreground">Conversation perspective</div>
+                        <div class="font-medium">Right side messages = {{ peekUser.name }}</div>
+                        <div class="text-muted-foreground">Left side messages = other participants</div>
+                    </div>
+                </div>
             </div>
         </div>
 

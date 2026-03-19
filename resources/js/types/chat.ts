@@ -78,6 +78,16 @@ export type ActiveConversation = {
 export type ChatPageProps = {
     conversations: ConversationSummary[];
     activeConversation?: ActiveConversation;
+    viewerUserId?: number;
+    peekMode?: {
+        enabled: boolean;
+        user: null | {
+            id: number;
+            name: string;
+            email: string;
+            avatar?: string | null;
+        };
+    };
 };
 
 export type BlockedUserEntry = {

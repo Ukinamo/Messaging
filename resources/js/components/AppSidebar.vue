@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { Archive, BookOpen, FolderGit2, LayoutGrid, MessageSquare, ShieldBan } from 'lucide-vue-next';
+import { Archive, LayoutGrid, MessageSquare, ShieldBan, Users } from 'lucide-vue-next';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
@@ -20,30 +20,44 @@ import type { NavItem } from '@/types';
 
 const page = usePage();
 const chatUnreadCount = computed(() => (page.props.chatUnreadCount as number) ?? 0);
+const isAdmin = computed(() => Boolean((page.props.auth as { user?: { is_admin?: boolean } }).user?.is_admin));
+const footerNavItems = computed<NavItem[]>(() => []);
 
-const mainNavItems = computed<NavItem[]>(() => [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-    {
-        title: 'Chat',
-        href: '/chat',
-        icon: MessageSquare,
-        badge: chatUnreadCount.value,
-    },
-    {
-        title: 'Archived',
-        href: '/chat/archived',
-        icon: Archive,
-    },
-    {
-        title: 'Blocked',
-        href: '/chat/blocked',
-        icon: ShieldBan,
-    },
-]);
+const mainNavItems = computed<NavItem[]>(() => {
+    const items: NavItem[] = [
+        {
+            title: 'Dashboard',
+            href: dashboard(),
+            icon: LayoutGrid,
+        },
+        {
+            title: 'Chat',
+            href: '/chat',
+            icon: MessageSquare,
+            badge: chatUnreadCount.value,
+        },
+        {
+            title: 'Archived',
+            href: '/chat/archived',
+            icon: Archive,
+        },
+        {
+            title: 'Blocked',
+            href: '/chat/blocked',
+            icon: ShieldBan,
+        },
+    ];
+
+    if (isAdmin.value) {
+        items.push({
+            title: 'User Management',
+            href: '/admin/users',
+            icon: Users,
+        });
+    }
+
+    return items;
+});
 </script>
 
 <template>
