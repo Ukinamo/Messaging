@@ -18,7 +18,7 @@ withDefaults(
     },
 );
 
-const appName = import.meta.env.VITE_APP_NAME || 'MessageHub';
+const appName = import.meta.env.VITE_APP_NAME || 'Message-Me';
 const year = new Date().getFullYear();
 const featuresSection = ref<HTMLElement | null>(null);
 

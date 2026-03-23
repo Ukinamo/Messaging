@@ -31,7 +31,7 @@
             }
         </style>
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ config('app.name', 'Message-Me') }}</title>
 
         <link rel="icon" href="/message_logo.png" type="image/png" sizes="any">
         <link rel="apple-touch-icon" href="/message_logo.png">

@@ -6,7 +6,7 @@ import '../css/app.css';
 import { initializeTheme } from '@/composables/useAppearance';
 import { startPresenceChannel } from '@/composables/usePresence';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = import.meta.env.VITE_APP_NAME || 'Message-Me';
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),

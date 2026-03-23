@@ -6,7 +6,7 @@ services:
     plan: free
     envVars:
       - key: APP_NAME
-        value: Messaging
+        value: Message-Me
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
@@ -42,7 +42,7 @@ services:
       - key: REVERB_SCHEME
         value: https
       - key: VITE_APP_NAME
-        value: Messaging
+        value: Message-Me
       - key: VITE_REVERB_APP_KEY
         value: laravel-reverb-key
       - key: VITE_REVERB_HOST

@@ -20,7 +20,7 @@ primary_region = 'sjc'
     handlers = ["tls", "http"]
 
 [env]
-  APP_NAME = "Messaging"
+  APP_NAME = "Message-Me"
   APP_ENV = "production"
   APP_DEBUG = "false"
   DB_CONNECTION = "sqlite"
@@ -34,7 +34,7 @@ primary_region = 'sjc'
   REVERB_SERVER_HOST = "0.0.0.0"
   REVERB_PORT = "8080"
   REVERB_SCHEME = "https"
-  VITE_APP_NAME = "Messaging"
+  VITE_APP_NAME = "Message-Me"
   VITE_REVERB_APP_KEY = "laravel-reverb-key"
   VITE_REVERB_PORT = "8080"
   VITE_REVERB_SCHEME = "https"
