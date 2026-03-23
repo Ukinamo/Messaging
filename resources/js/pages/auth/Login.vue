@@ -1,14 +1,6 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
+import { Form, Head, Link } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
-import PasswordInput from '@/components/PasswordInput.vue';
-import TextLink from '@/components/TextLink.vue';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
-import AuthBase from '@/layouts/AuthLayout.vue';
 import { register } from '@/routes';
 import { store } from '@/routes/login';
 import { request } from '@/routes/password';
@@ -21,90 +13,160 @@ defineProps<{
 </script>
 
 <template>
-    <AuthBase
-        title="Log in to your account"
-        description="Enter your email and password below to log in"
-    >
-        <Head title="Log in" />
+    <Head title="Log in" />
 
-        <div
-            v-if="status"
-            class="mb-4 text-center text-sm font-medium text-green-600"
-        >
-            {{ status }}
+    <div class="login-container">
+        <div class="hero-background">
+            <div class="hero-gradient-1" />
+            <div class="hero-gradient-2" />
         </div>
 
-        <Form
-            v-bind="store.form()"
-            :reset-on-success="['password']"
-            v-slot="{ errors, processing }"
-            class="flex flex-col gap-6"
-        >
-            <div class="grid gap-6">
-                <div class="grid gap-2">
-                    <Label for="email">Email address</Label>
-                    <Input
-                        id="email"
-                        type="email"
-                        name="email"
-                        required
-                        autofocus
-                        :tabindex="1"
-                        autocomplete="email"
-                        placeholder="email@example.com"
-                    />
-                    <InputError :message="errors.email" />
-                </div>
-
-                <div class="grid gap-2">
-                    <div class="flex items-center justify-between">
-                        <Label for="password">Password</Label>
-                        <TextLink
-                            v-if="canResetPassword"
-                            :href="request()"
-                            class="text-sm"
-                            :tabindex="5"
-                        >
-                            Forgot password?
-                        </TextLink>
-                    </div>
-                    <PasswordInput
-                        id="password"
-                        name="password"
-                        required
-                        :tabindex="2"
-                        autocomplete="current-password"
-                        placeholder="Password"
-                    />
-                    <InputError :message="errors.password" />
-                </div>
-
-                <div class="flex items-center justify-between">
-                    <Label for="remember" class="flex items-center space-x-3">
-                        <Checkbox id="remember" name="remember" :tabindex="3" />
-                        <span>Remember me</span>
-                    </Label>
-                </div>
-
-                <Button
-                    type="submit"
-                    class="mt-4 w-full"
-                    :tabindex="4"
-                    :disabled="processing"
-                    data-test="login-button"
-                >
-                    <Spinner v-if="processing" />
-                    Log in
-                </Button>
+        <div class="login-wrapper">
+            <div class="login-header">
+                <img
+                    src="/message_logo.png"
+                    alt=""
+                    class="auth-page-logo"
+                />
+                <h1>Welcome Back</h1>
+                <p>Sign in to your messaging account</p>
             </div>
 
             <div
-                class="text-center text-sm text-muted-foreground"
-                v-if="canRegister"
+                v-if="status"
+                class="mb-4 rounded-lg px-4 py-3 text-center text-sm font-medium text-[var(--success)]"
+                style="
+                    background: rgba(16, 185, 129, 0.1);
+                    border: 1px solid rgba(16, 185, 129, 0.3);
+                "
             >
-                Don't have an account?
-                <TextLink :href="register()" :tabindex="5">Sign up</TextLink>
+                {{ status }}
             </div>
-        </Form>
-    </AuthBase>
+
+            <div class="card login-card">
+                <Form
+                    v-bind="store.form()"
+                    :reset-on-success="['password']"
+                    v-slot="{ errors, processing }"
+                >
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <div class="input-wrapper">
+                            <svg
+                                class="input-icon"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                                />
+                            </svg>
+                            <input
+                                id="email"
+                                type="email"
+                                name="email"
+                                required
+                                autofocus
+                                autocomplete="email"
+                                tabindex="1"
+                                placeholder="you@example.com"
+                            />
+                        </div>
+                        <InputError :message="errors.email" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <div class="input-wrapper">
+                            <svg
+                                class="input-icon"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                />
+                            </svg>
+                            <input
+                                id="password"
+                                type="password"
+                                name="password"
+                                required
+                                autocomplete="current-password"
+                                tabindex="2"
+                                placeholder="••••••••"
+                            />
+                        </div>
+                        <InputError :message="errors.password" />
+                    </div>
+
+                    <div class="form-footer">
+                        <label class="checkbox-label">
+                            <input
+                                id="remember"
+                                name="remember"
+                                type="checkbox"
+                                value="1"
+                                tabindex="3"
+                            />
+                            <span>Remember me</span>
+                        </label>
+                        <Link
+                            v-if="canResetPassword"
+                            :href="request()"
+                            class="forgot-link"
+                            tabindex="5"
+                        >
+                            Forgot password?
+                        </Link>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary btn-full"
+                        :disabled="processing"
+                        tabindex="4"
+                        data-test="login-button"
+                    >
+                        <span v-if="!processing" class="btn-content">
+                            Sign In
+                            <svg
+                                width="16"
+                                height="16"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                                />
+                            </svg>
+                        </span>
+                        <span v-else class="btn-content">
+                            <span class="auth-spinner" />
+                            Signing in…
+                        </span>
+                    </button>
+                </Form>
+            </div>
+
+            <div v-if="canRegister" class="auth-footer">
+                <p>
+                    Don't have an account?
+                    <Link :href="register()" class="auth-link">Create one</Link>
+                </p>
+            </div>
+        </div>
+    </div>
 </template>
