@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Chat;
 
 use App\Http\Controllers\Controller;
 use App\Models\ArchivedConversation;
-use App\Models\BlockedUser;
 use App\Models\Conversation;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -71,7 +70,7 @@ class ConversationController extends Controller
             $other = $participants->firstWhere('id', '!=', $request->user()->id)
                 ?? $participants->firstWhere('id', $request->user()->id);
             $isSelfChat = $other && $other->id === $request->user()->id;
-            $displayName = $isSelfChat ? ($other->name . ' (You)') : ($other?->name ?? 'Deleted User');
+            $displayName = $isSelfChat ? ($other->name.' (You)') : ($other?->name ?? 'Deleted User');
             $displayAvatar = $other?->avatar;
         }
 
@@ -85,7 +84,7 @@ class ConversationController extends Controller
             ->exists();
 
         $isBlocked = false;
-        if ($conversation->type === 'private' && !($isSelfChat ?? false)) {
+        if ($conversation->type === 'private' && ! ($isSelfChat ?? false)) {
             $otherForBlock = $participants->firstWhere('id', '!=', $request->user()->id);
             if ($otherForBlock) {
                 $isBlocked = $request->user()->hasBlocked($otherForBlock->id);
@@ -201,7 +200,7 @@ class ConversationController extends Controller
         ]);
     }
 
-    private function getConversationsForUser(User $user): array
+    public function getConversationsForUser(User $user): array
     {
         $archivedIds = ArchivedConversation::where('user_id', $user->id)
             ->pluck('conversation_id');
@@ -228,7 +227,7 @@ class ConversationController extends Controller
                 ->count();
 
             $privateName = $isSelfChat
-                ? ($other->name . ' (You)')
+                ? ($other->name.' (You)')
                 : ($other?->name ?? 'Deleted User');
 
             return [
@@ -279,7 +278,7 @@ class ConversationController extends Controller
             $isSelfChat = $other && $other->id === $user->id;
 
             $privateName = $isSelfChat
-                ? ($other->name . ' (You)')
+                ? ($other->name.' (You)')
                 : ($other?->name ?? 'Deleted User');
 
             return [

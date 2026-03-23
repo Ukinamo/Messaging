@@ -16,9 +16,10 @@ type Props = {
     user: User;
 };
 
-const handleLogout = () => {
-    router.flushAll();
-};
+/** POST logout — do not use Inertia Link inside DropdownMenuItem (Radix can set defaultPrevented and skip the visit). */
+function handleLogout() {
+    router.post(logout.url());
+}
 
 defineProps<Props>();
 </script>
@@ -39,16 +40,12 @@ defineProps<Props>();
         </DropdownMenuItem>
     </DropdownMenuGroup>
     <DropdownMenuSeparator />
-    <DropdownMenuItem :as-child="true">
-        <Link
-            class="block w-full cursor-pointer"
-            :href="logout()"
-            @click="handleLogout"
-            as="button"
-            data-test="logout-button"
-        >
-            <LogOut class="mr-2 h-4 w-4" />
-            Log out
-        </Link>
+    <DropdownMenuItem
+        class="cursor-pointer"
+        data-test="logout-button"
+        @select="handleLogout"
+    >
+        <LogOut class="mr-2 h-4 w-4" />
+        Log out
     </DropdownMenuItem>
 </template>

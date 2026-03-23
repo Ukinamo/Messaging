@@ -66,7 +66,7 @@ const canSend = computed(() => body.value.trim().length > 0 || attachments.value
 </script>
 
 <template>
-    <div class="border-t px-4 pb-4 pt-3">
+    <div class="zguide-message-input-area border-t px-4 pb-4 pt-3">
         <!-- Attachment preview strip -->
         <div v-if="previews.length > 0" class="mb-3 flex gap-2 overflow-x-auto pb-1">
             <div

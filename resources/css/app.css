@@ -3,6 +3,7 @@
 @import 'tw-animate-css';
 
 @import './messaging-design-system.css';
+@import './zguide-inertia.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -81,8 +82,10 @@
 }
 
 /*
- * Shadcn/UI semantic tokens — mapped to Zguide / design-system variables
- * (see messaging-design-system.css :root)
+ * Single source of truth for UI color: use these tokens everywhere (Tailwind
+ * bg-background, text-foreground, bg-card, border-border, text-primary, etc.).
+ * messaging-design-system.css defines --primary-indigo etc.; :root maps them
+ * into --background, --foreground, --primary, … for light/dark.
  */
 :root {
     --background: var(--background-pearl);

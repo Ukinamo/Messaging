@@ -60,7 +60,7 @@ h6 {
         'Poppins', ui-sans-serif, system-ui, sans-serif;
     font-weight: 700;
     line-height: 1.2;
-    color: var(--text-charcoal);
+    color: var(--foreground);
 }
 
 h1 {
@@ -82,17 +82,31 @@ h3 {
 
 p {
     margin-bottom: var(--ds-spacing-lg);
-    color: var(--muted-text);
+    color: var(--muted-foreground);
 }
 
 a {
-    color: var(--primary-purple);
+    color: var(--primary);
     text-decoration: none;
-    transition: color var(--ds-transition-fast);
+    transition: opacity var(--ds-transition-fast);
 }
 
 a:hover {
-    color: var(--primary-indigo);
+    opacity: 0.88;
+}
+
+/*
+ * App sidebar: global `a { color: var(--primary) }` uses --primary-indigo, which is
+ * the same as --sidebar-background in light mode — links became invisible.
+ * Force sidebar link colors to sidebar tokens (NavMain, logo link, footer).
+ */
+[data-sidebar] a {
+    color: var(--sidebar-foreground);
+    opacity: 1;
+}
+
+[data-sidebar] a:hover {
+    opacity: 1;
 }
 
 /* Buttons */
@@ -153,7 +167,7 @@ a:hover {
 .btn-ghost {
     background: transparent;
     border: none;
-    color: var(--text-charcoal);
+    color: var(--foreground);
 }
 
 .btn-ghost:hover {
@@ -179,7 +193,7 @@ label {
     display: block;
     margin-bottom: var(--ds-spacing-sm);
     font-weight: 500;
-    color: var(--text-charcoal);
+    color: var(--foreground);
     font-size: 14px;
 }
 
@@ -191,13 +205,13 @@ textarea,
 select {
     width: 100%;
     padding: var(--ds-spacing-md) var(--ds-spacing-lg);
-    border: 1px solid var(--muted-gray);
+    border: 1px solid var(--border);
     border-radius: var(--ds-radius-md);
     font-family:
         'Inter', ui-sans-serif, system-ui, sans-serif;
     font-size: 16px;
-    color: var(--text-charcoal);
-    background-color: var(--ds-white);
+    color: var(--foreground);
+    background-color: var(--card);
     transition: all var(--ds-transition-base);
 }
 
@@ -205,7 +219,7 @@ input[type='text']::placeholder,
 input[type='email']::placeholder,
 input[type='password']::placeholder,
 textarea::placeholder {
-    color: var(--muted-text);
+    color: var(--muted-foreground);
 }
 
 input[type='text']:focus,
@@ -304,9 +318,9 @@ input[type='checkbox'] {
     position: sticky;
     top: 0;
     z-index: 50;
-    background: rgba(255, 255, 255, 0.8);
+    background: color-mix(in srgb, var(--background) 88%, transparent);
     backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--muted-gray);
+    border-bottom: 1px solid var(--border);
     box-shadow: var(--ds-shadow-sm);
 }
 
@@ -323,7 +337,7 @@ input[type='checkbox'] {
     gap: var(--ds-spacing-md);
     font-size: 20px;
     font-weight: 700;
-    color: var(--text-charcoal);
+    color: var(--foreground);
 }
 
 .navbar-logo {
@@ -447,10 +461,22 @@ input[type='checkbox'] {
     }
 }
 
+/* Hero illustration: no panel/background behind the asset */
 .hero-image {
+    display: flex;
     width: 100%;
-    height: 100%;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+}
+
+.hero-image img {
+    display: block;
+    width: 100%;
+    max-width: 36rem;
+    height: auto;
     object-fit: contain;
+    background: transparent;
 }
 
 /* Features */
@@ -520,10 +546,10 @@ input[type='checkbox'] {
 .cta {
     background: linear-gradient(
         135deg,
-        var(--primary-indigo) 0%,
-        var(--primary-purple) 100%
+        var(--primary) 0%,
+        var(--secondary) 100%
     );
-    color: white;
+    color: var(--primary-foreground);
     padding: var(--ds-spacing-4xl) var(--ds-spacing-xl);
     border-radius: var(--ds-radius-lg);
     text-align: center;
@@ -531,13 +557,13 @@ input[type='checkbox'] {
 }
 
 .cta h2 {
-    color: white;
+    color: var(--primary-foreground);
     margin-bottom: var(--ds-spacing-lg);
     font-size: 40px;
 }
 
 .cta p {
-    color: rgba(255, 255, 255, 0.9);
+    color: color-mix(in srgb, var(--primary-foreground) 90%, transparent);
     margin-bottom: var(--ds-spacing-xl);
     max-width: 600px;
     margin-left: auto;
@@ -546,8 +572,9 @@ input[type='checkbox'] {
 
 /* Footer */
 footer {
-    background: var(--text-charcoal);
-    color: white;
+    background: var(--card);
+    color: var(--foreground);
+    border-top: 1px solid var(--border);
     padding: var(--ds-spacing-3xl) 0 var(--ds-spacing-xl);
 }
 
@@ -565,7 +592,7 @@ footer {
 }
 
 .footer-section h4 {
-    color: white;
+    color: var(--foreground);
     margin-bottom: var(--ds-spacing-lg);
     font-size: 16px;
 }
@@ -579,16 +606,16 @@ footer {
 }
 
 .footer-section a {
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--muted-foreground);
     transition: color var(--ds-transition-fast);
 }
 
 .footer-section a:hover {
-    color: white;
+    color: var(--primary);
 }
 
 .footer-bottom {
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid var(--border);
     padding-top: var(--ds-spacing-xl);
     display: flex;
     flex-direction: column;
@@ -605,7 +632,7 @@ footer {
 
 .footer-bottom p {
     margin: 0;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--muted-foreground);
     font-size: 14px;
 }
 
@@ -615,7 +642,7 @@ footer {
 }
 
 .footer-social a {
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--muted-foreground);
     font-size: 14px;
 }
 
@@ -627,8 +654,8 @@ footer {
 .text-gradient {
     background: linear-gradient(
         135deg,
-        var(--primary-indigo) 0%,
-        var(--primary-purple) 100%
+        var(--primary) 0%,
+        var(--secondary) 100%
     );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -638,8 +665,8 @@ footer {
 .gradient-bg {
     background: linear-gradient(
         135deg,
-        var(--primary-indigo) 0%,
-        var(--primary-purple) 100%
+        var(--primary) 0%,
+        var(--secondary) 100%
     );
 }
 
@@ -689,6 +716,14 @@ footer {
 
 .dark a:hover {
     color: var(--accent-lavender);
+}
+
+.dark [data-sidebar] a {
+    color: var(--sidebar-foreground);
+}
+
+.dark [data-sidebar] a:hover {
+    color: var(--sidebar-accent-foreground);
 }
 
 .dark .navbar {
@@ -814,7 +849,7 @@ footer {
 
 .footer-section > p {
     margin: 0;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--muted-foreground);
     font-size: 14px;
 }
 
@@ -828,8 +863,8 @@ footer {
     min-height: 100vh;
     background: linear-gradient(
         to bottom right,
-        var(--background-pearl),
-        rgba(165, 139, 215, 0.05)
+        var(--background),
+        color-mix(in srgb, var(--primary) 6%, var(--background))
     );
     display: flex;
     align-items: center;

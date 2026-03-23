@@ -1,0 +1,577 @@
+/*
+ * Zguide layout surfaces — use the same semantic tokens as the rest of the app
+ * (see resources/css/app.css :root / .dark). Spacing/radius still use --ds-*.
+ */
+
+/* ========== Dashboard ========== */
+.dashboard-page {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-spacing-2xl);
+    width: 100%;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: var(--ds-spacing-lg);
+    padding-right: var(--ds-spacing-lg);
+    padding-bottom: var(--ds-spacing-2xl);
+}
+
+.dashboard-empty-recent {
+    padding: var(--ds-spacing-xl);
+    text-align: center;
+}
+
+.overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--ds-spacing-lg);
+}
+
+.overview-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--ds-radius-lg);
+    padding: var(--ds-spacing-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--ds-spacing-lg);
+    transition: all var(--ds-transition-base);
+    box-shadow: var(--ds-shadow-sm);
+}
+
+.overview-card:hover {
+    box-shadow: var(--ds-shadow-md);
+    transform: translateY(-2px);
+}
+
+.dashboard-page .card-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--ds-radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+.card-content {
+    flex: 1;
+}
+
+.dashboard-page .card-label {
+    font-size: 12px;
+    color: var(--muted-foreground);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 4px 0;
+    font-weight: 600;
+}
+
+.dashboard-page .card-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--foreground);
+    margin: 0;
+}
+
+.recent-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--ds-radius-lg);
+    padding: var(--ds-spacing-xl);
+    box-shadow: var(--ds-shadow-sm);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--ds-spacing-lg);
+}
+
+.section-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--foreground);
+}
+
+.view-all-link {
+    color: var(--primary);
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity var(--ds-transition-fast);
+}
+
+.view-all-link:hover {
+    opacity: 0.85;
+}
+
+.dashboard-page .conversations-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-spacing-md);
+}
+
+.dashboard-page .conversation-item {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-spacing-lg);
+    padding: var(--ds-spacing-md);
+    border-radius: var(--ds-radius-md);
+    transition: all var(--ds-transition-fast);
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    font: inherit;
+    color: inherit;
+}
+
+.dashboard-page .conversation-item:hover {
+    background-color: var(--background);
+}
+
+.dark .dashboard-page .conversation-item:hover {
+    background-color: color-mix(in srgb, var(--accent) 80%, transparent);
+}
+
+.conversation-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.dashboard-page .conversation-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.dashboard-page .conversation-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 0;
+}
+
+.dashboard-page .conversation-time {
+    font-size: 12px;
+    color: var(--muted-foreground);
+}
+
+.dashboard-page .conversation-preview {
+    font-size: 14px;
+    color: var(--muted-foreground);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dashboard-page .unread-badge {
+    background: linear-gradient(
+        135deg,
+        var(--primary) 0%,
+        var(--secondary) 100%
+    );
+    color: var(--primary-foreground);
+    font-size: 12px;
+    font-weight: 700;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 6px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.quick-actions-section h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 var(--ds-spacing-lg) 0;
+    color: var(--foreground);
+}
+
+.actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--ds-spacing-lg);
+}
+
+a.action-card {
+    text-decoration: none;
+}
+
+.action-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--ds-radius-lg);
+    padding: var(--ds-spacing-xl);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ds-spacing-md);
+    cursor: pointer;
+    transition: all var(--ds-transition-base);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--foreground);
+    box-shadow: var(--ds-shadow-sm);
+}
+
+.action-card:hover {
+    box-shadow: var(--ds-shadow-md);
+    transform: translateY(-4px);
+    border-color: var(--primary);
+}
+
+.action-icon {
+    width: 48px;
+    height: 48px;
+    background: color-mix(in srgb, var(--primary) 14%, transparent);
+    border-radius: var(--ds-radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+}
+
+/* ========== Chat: layout shell ========== */
+.zguide-messages-shell {
+    display: grid;
+    grid-template-columns: minmax(15rem, min(20rem, 28vw)) minmax(0, 1fr);
+    align-items: stretch;
+    gap: 0;
+    flex: 1 1 0%;
+    min-height: 0;
+    align-self: stretch;
+    background: var(--card);
+    border-radius: var(--ds-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--ds-shadow-sm);
+    border: 1px solid var(--border);
+}
+
+.zguide-conversations-panel {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border);
+    background: var(--card);
+    min-height: 0;
+}
+
+.zguide-chat-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    background: var(--background);
+}
+
+.zguide-chat-main-inner {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--card);
+}
+
+.zguide-messages-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--ds-spacing-xl);
+    background: var(--background);
+}
+
+.zguide-chat-header {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: var(--ds-spacing-lg);
+}
+
+.zguide-message-input-area {
+    border-top: 1px solid var(--border);
+    background: var(--card);
+    padding: var(--ds-spacing-md) var(--ds-spacing-lg);
+}
+
+.dark .zguide-message-input-area {
+    background: var(--card);
+    border-color: var(--border);
+}
+
+.zguide-conv-header {
+    padding: var(--ds-spacing-sm) var(--ds-spacing-md);
+    border-bottom: 1px solid var(--border);
+}
+
+.zguide-filter-tabs {
+    display: flex;
+    gap: var(--ds-spacing-sm);
+    margin-top: var(--ds-spacing-sm);
+}
+
+.zguide-filter-tab {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--ds-radius-sm);
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted-foreground);
+    cursor: pointer;
+    transition: all var(--ds-transition-fast);
+}
+
+.zguide-filter-tab:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.zguide-filter-tab.active {
+    background: linear-gradient(
+        135deg,
+        var(--primary) 0%,
+        var(--secondary) 100%
+    );
+    border-color: transparent;
+    color: var(--primary-foreground);
+}
+
+button.zguide-conversation-card {
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    width: 100%;
+}
+
+.zguide-conversation-card {
+    display: flex;
+    align-items: center;
+    gap: var(--ds-spacing-sm);
+    padding: var(--ds-spacing-sm) var(--ds-spacing-md);
+    border-left: 3px solid transparent;
+    transition: all var(--ds-transition-fast);
+    border-radius: 0;
+}
+
+.zguide-conversation-card:hover {
+    background-color: var(--background);
+}
+
+.zguide-conversation-card.active {
+    background: linear-gradient(
+        135deg,
+        rgba(28, 26, 133, 0.05) 0%,
+        rgba(100, 39, 207, 0.05) 100%
+    );
+    border-left-color: var(--primary-purple);
+}
+
+.dark .zguide-conversation-card:hover {
+    background: color-mix(in srgb, var(--accent) 80%, transparent);
+}
+
+.conversations-list-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--ds-spacing-sm) 0;
+}
+
+/* ========== Archive (Zguide) ========== */
+.archive-page-z {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-spacing-xl);
+    width: 100%;
+    max-width: 960px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.archive-header-z {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ds-spacing-xl);
+    flex-wrap: wrap;
+}
+
+.archive-header-z .header-title h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    color: var(--foreground);
+}
+
+.archive-header-z .header-subtitle {
+    font-size: 14px;
+    color: var(--muted-foreground);
+    margin: 0;
+}
+
+.archive-header-z .search-wrapper-z {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--ds-radius-md);
+    padding: 0 var(--ds-spacing-md);
+    width: min(280px, 100%);
+}
+
+.archive-header-z .search-input-z {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: var(--ds-spacing-md);
+    font-size: 14px;
+    color: var(--foreground);
+}
+
+.archive-list-z {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-spacing-md);
+}
+
+.archive-item-z {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--ds-radius-lg);
+    padding: var(--ds-spacing-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--ds-spacing-lg);
+    transition: all var(--ds-transition-base);
+}
+
+.archive-item-z:hover {
+    box-shadow: var(--ds-shadow-md);
+    border-color: var(--primary);
+}
+
+.archive-empty-z {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ds-spacing-lg);
+    padding: var(--ds-spacing-4xl) var(--ds-spacing-xl);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--ds-radius-lg);
+    text-align: center;
+}
+
+/* ========== Blocked (Zguide) ========== */
+.blocked-page-z {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ds-spacing-xl);
+    width: 100%;
+    max-width: 1100px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.blocked-header-z {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ds-spacing-xl);
+    flex-wrap: wrap;
+}
+
+.blocked-header-z .header-title h2 {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    color: var(--foreground);
+}
+
+.blocked-header-z .header-subtitle {
+    font-size: 14px;
+    color: var(--muted-foreground);
+    margin: 0;
+}
+
+.blocked-header-z .search-wrapper-z {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--ds-radius-md);
+    padding: 0 var(--ds-spacing-md);
+    width: min(280px, 100%);
+}
+
+.blocked-grid-z {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--ds-spacing-lg);
+}
+
+.blocked-card-z {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--ds-radius-lg);
+    padding: var(--ds-spacing-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ds-spacing-md);
+    text-align: center;
+    transition: all var(--ds-transition-base);
+}
+
+.blocked-card-z:hover {
+    box-shadow: var(--ds-shadow-md);
+    border-color: var(--primary);
+}
+
+.blocked-empty-z {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--ds-spacing-lg);
+    padding: var(--ds-spacing-4xl) var(--ds-spacing-xl);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--ds-radius-lg);
+    text-align: center;
+}
+
+@media (max-width: 640px) {
+    .overview-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-page .card-value {
+        font-size: 24px;
+    }
+
+    .actions-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .zguide-messages-shell {
+        grid-template-columns: 1fr;
+        flex: 1 1 auto;
+        min-height: min(70dvh, 100%);
+        height: auto;
+        max-height: none;
+    }
+}

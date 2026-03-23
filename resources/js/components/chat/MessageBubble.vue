@@ -164,10 +164,10 @@ function linkify(text: string): string {
                     target="_blank"
                     :class="
                         cn(
-                            'flex items-center gap-2 rounded-xl px-3 py-2 text-sm',
+                            'flex items-center gap-2 rounded-xl px-3 py-2 text-sm shadow-sm',
                             isMine
                                 ? 'bg-primary text-primary-foreground'
-                                : 'bg-muted text-foreground',
+                                : 'bg-card text-card-foreground border border-border/90',
                         )
                     "
                 >
@@ -185,14 +185,24 @@ function linkify(text: string): string {
                 v-if="message.body"
                 :class="
                     cn(
-                        'inline-block rounded-2xl px-3.5 py-2 text-sm leading-relaxed',
+                        'inline-block rounded-2xl px-3.5 py-2 text-sm leading-relaxed shadow-sm',
                         isMine
                             ? 'bg-primary text-primary-foreground rounded-br-md'
-                            : 'bg-muted text-foreground rounded-bl-md',
+                            : 'bg-card text-card-foreground border border-border/90 rounded-bl-md',
                     )
                 "
             >
-                <p class="whitespace-pre-wrap wrap-break-word" v-html="linkify(message.body)" />
+                <p
+                    :class="
+                        cn(
+                            'whitespace-pre-wrap wrap-break-word',
+                            isMine
+                                ? '[&_a]:text-primary-foreground/95 [&_a]:underline [&_a]:break-all'
+                                : '[&_a]:text-primary [&_a]:underline [&_a]:break-all dark:[&_a]:text-[#b8aef0]',
+                        )
+                    "
+                    v-html="linkify(message.body)"
+                />
             </div>
 
             <!-- Reactions display -->

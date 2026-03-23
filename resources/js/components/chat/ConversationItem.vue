@@ -40,12 +40,11 @@ function previewText(conv: ConversationSummary): string {
 
 <template>
     <button
+        type="button"
         :class="
             cn(
-                'group flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left transition-all duration-150',
-                active
-                    ? 'bg-accent text-accent-foreground shadow-sm'
-                    : 'hover:bg-muted/60',
+                'zguide-conversation-card group flex items-center gap-2',
+                props.active && 'active',
             )
         "
         @click="$emit('select', conversation)"
@@ -56,39 +55,60 @@ function previewText(conv: ConversationSummary): string {
             :online="online"
             show-status
             size="md"
-            class="mt-0.5 shrink-0"
+            class="shrink-0"
         />
 
         <div class="min-w-0 flex-1">
             <div class="flex items-baseline justify-between gap-2">
-                <span class="truncate text-[13px] font-semibold leading-tight">
+                <span
+                    class="truncate text-[13px] font-semibold leading-tight text-foreground"
+                >
                     {{ conversation.name || 'Chat' }}
                 </span>
                 <span
                     v-if="conversation.latest_message"
-                    :class="cn(
-                        'shrink-0 text-[11px]',
-                        conversation.unread_count > 0 ? 'text-primary font-medium' : 'text-muted-foreground',
-                    )"
+                    :class="
+                        cn(
+                            'shrink-0 text-[10px] tabular-nums',
+                            conversation.unread_count > 0
+                                ? 'font-medium text-[var(--primary-purple)]'
+                                : 'text-muted-foreground',
+                        )
+                    "
                 >
                     {{ formatTime(conversation.latest_message.created_at) }}
                 </span>
             </div>
-            <div class="mt-1 flex items-center justify-between gap-2">
-                <p :class="cn(
-                    'truncate text-xs leading-snug',
-                    conversation.unread_count > 0 ? 'text-foreground/70 font-medium' : 'text-muted-foreground',
-                )">
-                    <span v-if="conversation.type === 'group' && conversation.latest_message?.sender_name">
+            <div class="mt-0.5 flex items-center justify-between gap-2">
+                <p
+                    :class="
+                        cn(
+                            'truncate text-xs leading-snug',
+                            conversation.unread_count > 0
+                                ? 'font-medium text-foreground/80'
+                                : 'text-muted-foreground',
+                        )
+                    "
+                >
+                    <span
+                        v-if="
+                            conversation.type === 'group' &&
+                            conversation.latest_message?.sender_name
+                        "
+                    >
                         {{ conversation.latest_message.sender_name }}:
                     </span>
-                    {{ previewText(props.conversation) }}
+                    {{ previewText(conversation) }}
                 </p>
                 <span
                     v-if="conversation.unread_count > 0"
-                    class="bg-primary text-primary-foreground flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-bold"
+                    class="flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary px-1 text-[10px] font-bold text-primary-foreground"
                 >
-                    {{ conversation.unread_count > 99 ? '99+' : conversation.unread_count }}
+                    {{
+                        conversation.unread_count > 99
+                            ? '99+'
+                            : conversation.unread_count
+                    }}
                 </span>
             </div>
         </div>

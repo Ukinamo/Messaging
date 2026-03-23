@@ -6,7 +6,7 @@ const appName = import.meta.env.VITE_APP_NAME || 'Message-Me';
 
 <template>
     <div
-        class="flex size-15 shrink-0 items-center justify-center overflow-hidden rounded-md"
+        class="flex size-9 shrink-0 overflow-hidden rounded-md"
     >
         <AppLogoIcon class="size-full object-contain" />
     </div>

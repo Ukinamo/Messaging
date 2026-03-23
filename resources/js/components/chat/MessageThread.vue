@@ -103,7 +103,7 @@ defineExpose({ scrollToBottom });
 <template>
     <div
         ref="containerRef"
-        class="flex-1 overflow-y-auto px-4 py-4"
+        class="zguide-messages-area flex-1 overflow-y-auto px-4 py-4"
         @scroll="onScroll"
     >
         <div v-if="loadingMore" class="flex justify-center py-3">

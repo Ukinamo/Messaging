@@ -177,12 +177,15 @@ async function handleUnblock(userId: number) {
     <Head title="Chat" />
 
     <AppLayout :breadcrumbs="breadcrumbs">
-        <div class="flex h-[calc(100vh-4rem)] overflow-hidden rounded-xl border border-sidebar-border/70 shadow-sm dark:border-sidebar-border">
+        <div class="flex min-h-0 flex-1 flex-col px-2 pb-2 pt-1 md:px-0 md:pb-3 md:pt-0">
+        <div
+            class="zguide-messages-shell flex min-h-0 flex-1 flex-col overflow-hidden"
+        >
             <!-- Conversation list panel -->
             <div
                 :class="
                     cn(
-                        'bg-background/50 w-full shrink-0 border-r md:w-80 lg:w-96',
+                        'h-full min-h-0 w-full min-w-0 shrink-0',
                         mobileShowThread ? 'hidden md:block' : 'block',
                     )
                 "
@@ -201,12 +204,15 @@ async function handleUnblock(userId: number) {
             <div
                 :class="
                     cn(
-                        'bg-background flex min-w-0 flex-1',
+                        'zguide-chat-main flex min-w-0 flex-1 flex-col',
                         !mobileShowThread ? 'hidden md:flex' : 'flex',
                     )
                 "
             >
-                <div v-if="activeConversation" class="flex min-w-0 flex-1 flex-col">
+                <div
+                    v-if="activeConversation"
+                    class="zguide-chat-main-inner flex min-w-0 flex-1 flex-col"
+                >
                     <div
                         v-if="isPeekMode && peekUser"
                         class="bg-amber-500/10 text-amber-700 dark:text-amber-300 border-b px-4 py-2 text-xs font-medium"
@@ -257,18 +263,24 @@ async function handleUnblock(userId: number) {
                 </div>
 
                 <!-- Empty state -->
-                <div v-else class="flex flex-1 flex-col items-center justify-center gap-4 p-8">
-                    <div class="bg-muted/50 flex size-20 items-center justify-center rounded-full">
-                        <MessageSquare class="text-muted-foreground/60 size-9" />
+                <div
+                    v-else
+                    class="empty-state flex flex-1 flex-col items-center justify-center gap-4 p-8"
+                >
+                    <div class="empty-icon text-[var(--accent-lavender)] opacity-50">
+                        <MessageSquare class="size-16 stroke-1" />
                     </div>
                     <div class="text-center">
-                        <h3 class="text-lg font-semibold">Your Messages</h3>
+                        <h3 class="text-lg font-semibold text-foreground">
+                            Your Messages
+                        </h3>
                         <p class="text-muted-foreground mt-1 max-w-xs text-sm leading-relaxed">
                             Select a conversation from the list or start a new one to begin chatting.
                         </p>
                     </div>
                     <button
-                        class="bg-primary text-primary-foreground hover:bg-primary/90 mt-1 rounded-full px-5 py-2.5 text-sm font-medium shadow-sm transition-all hover:shadow-md"
+                        type="button"
+                        class="btn btn-primary mt-1 rounded-full px-5 py-2.5 text-sm font-medium"
                         @click="showNewChatDialog = true"
                     >
                         Start a Conversation
@@ -310,6 +322,7 @@ async function handleUnblock(userId: number) {
                     </div>
                 </div>
             </div>
+        </div>
         </div>
 
         <NewConversationDialog

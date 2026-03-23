@@ -17,7 +17,9 @@ defineEmits<{
 </script>
 
 <template>
-    <div class="bg-background/80 flex items-center gap-3 border-b px-4 py-2.5 backdrop-blur-sm">
+    <div
+        class="zguide-chat-header flex items-center gap-3 backdrop-blur-sm"
+    >
         <button
             class="text-muted-foreground hover:text-foreground hover:bg-accent -ml-1 flex size-8 items-center justify-center rounded-full transition-colors md:hidden"
             @click="$emit('back')"
