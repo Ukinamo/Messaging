@@ -61,7 +61,7 @@ function scrollToFeatures() {
 <template>
     <Head :title="`Welcome — ${appName}`" />
 
-    <div class="home-container min-h-screen bg-[var(--background-pearl)]">
+    <div class="home-container min-h-screen bg-background text-foreground">
         <nav class="navbar">
             <div class="container">
                 <div class="navbar-content">
