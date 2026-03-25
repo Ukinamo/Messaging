@@ -46,4 +46,13 @@ return [
         'model' => env('OPENAI_MODEL', 'gpt-4.1-mini'),
     ],
 
+    'wisechats' => [
+        // WiseChats API Key (put the key here from WiseChats API Keys page)
+        'key' => env('WISECHATS_API_KEY'),
+        // WiseChats "X-Widget-Id" (found on the Settings page of your WiseChat)
+        'widget_id' => env('WISECHATS_WIDGET_ID'),
+        // Optional override
+        'base_url' => env('WISECHATS_BASE_URL', 'https://api.wisechats.ai/api/v1'),
+    ],
+
 ];

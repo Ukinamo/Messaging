@@ -6,7 +6,13 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
     server: {
-        host: '0.0.0.0',
+        // Use a browser-reachable host for injected dev scripts.
+        host: '127.0.0.1',
+        port: 5173,
+        strictPort: true,
+        hmr: {
+            host: '127.0.0.1',
+        },
     },
     plugins: [
         laravel({

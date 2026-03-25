@@ -34,7 +34,7 @@ const messages = ref<ChatMessage[]>([
     {
         id: uuid(),
         role: 'assistant',
-        content: "Hi! I'm your assistant. How can I help?",
+        content: "Hi! I’m Meme Chat Bot. Want rizz help or a message suggestion?",
         createdAt: Date.now(),
     },
 ]);
@@ -110,12 +110,14 @@ function setupDragListeners(fromButton: boolean) {
         stopDrag(e, fromButton);
         window.removeEventListener('mousemove', move as (e: MouseEvent) => void);
         window.removeEventListener('mouseup', up as (e: MouseEvent) => void);
-        window.removeEventListener('touchmove', move, { passive: false });
+        // `removeEventListener` does not reliably accept `passive` options across TS DOM libs.
+        window.removeEventListener('touchmove', move as unknown as EventListener);
         window.removeEventListener('touchend', up);
     };
     window.addEventListener('mousemove', move as (e: MouseEvent) => void);
     window.addEventListener('mouseup', up as (e: MouseEvent) => void);
-    window.addEventListener('touchmove', move, { passive: false });
+    // Use an explicit passive=false listener so we can call `preventDefault()` during touch dragging.
+    window.addEventListener('touchmove', move as unknown as EventListener, { passive: false } as AddEventListenerOptions);
     window.addEventListener('touchend', up);
 }
 
@@ -190,7 +192,7 @@ async function send() {
             scrollToBottom();
         } catch (err: unknown) {
             const res = err && typeof err === 'object' && 'response' in err ? (err as { response?: { data?: { message?: string }; status?: number } }).response : undefined;
-            const msg = res?.data?.message ?? 'AI is unavailable. Check GEMINI_API_KEY in .env and try again.';
+            const msg = res?.data?.message ?? 'AI is unavailable. Check GEMINI_API_KEY / GEMINI_MODEL in .env and try again.';
 
             const isRateLimit = res?.status === 429 || /quota|rate limit|retry in/i.test(msg);
 
