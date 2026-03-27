@@ -2,6 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
+import { ref } from 'vue';
 
 type ManagedUser = {
     id: number;
@@ -11,25 +12,18 @@ type ManagedUser = {
     created_at: string;
 };
 
-type PeekConversation = {
-    id: number;
-    type: 'private' | 'group';
-    name: string;
-    latest_message: null | {
-        body: string | null;
-        sender_name: string;
-        created_at: string;
-    };
-};
-
 type Props = {
     users: ManagedUser[];
-    selectedUserId?: number;
-    selectedUserName?: string;
-    selectedUserConversations: PeekConversation[];
 };
 
 const props = defineProps<Props>();
+const editUserId = ref<number | null>(null);
+const editForm = ref({
+    name: '',
+    email: '',
+    password: '',
+    is_admin: false,
+});
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -39,20 +33,46 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 function selectUser(userId: number) {
-    router.get('/admin/users', { user_id: userId }, { preserveState: true, preserveScroll: true });
+    router.get('/admin/users/peek', { user_id: userId });
+}
+
+function goToCreateUser() {
+    router.visit('/admin/users/create');
 }
 
 function toggleAdmin(userId: number) {
     router.post(`/admin/users/${userId}/toggle-admin`, {}, { preserveScroll: true });
 }
 
-function peekConversation(conversationId: number) {
-    if (!props.selectedUserId) {
+function startEdit(user: ManagedUser) {
+    editUserId.value = user.id;
+    editForm.value.name = user.name;
+    editForm.value.email = user.email;
+    editForm.value.password = '';
+    editForm.value.is_admin = user.is_admin;
+}
+
+function cancelEdit() {
+    editUserId.value = null;
+}
+
+function updateUser(userId: number) {
+    router.put(`/admin/users/${userId}`, editForm.value, {
+        preserveScroll: true,
+        onSuccess: () => {
+            editUserId.value = null;
+        },
+    });
+}
+
+function deleteUser(userId: number, name: string) {
+    if (!window.confirm(`Delete user "${name}"? This cannot be undone.`)) {
         return;
     }
 
-    router.visit(`/chat/${conversationId}?peek_user_id=${props.selectedUserId}`);
+    router.delete(`/admin/users/${userId}`, { preserveScroll: true });
 }
+
 </script>
 
 <template>
@@ -61,7 +81,16 @@ function peekConversation(conversationId: number) {
     <AppLayout :breadcrumbs="breadcrumbs">
         <div class="flex h-full flex-1 flex-col gap-4 p-4">
             <div class="rounded-xl border p-4">
-                <h2 class="mb-3 text-lg font-semibold">Users</h2>
+                <div class="mb-3 flex items-center justify-between gap-2">
+                    <h2 class="text-lg font-semibold">Users</h2>
+                    <button
+                        type="button"
+                        class="rounded-md border px-3 py-1 text-sm hover:bg-muted"
+                        @click="goToCreateUser"
+                    >
+                        Create user
+                    </button>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full min-w-[700px] text-sm">
                         <thead>
@@ -78,12 +107,42 @@ function peekConversation(conversationId: number) {
                                 :key="u.id"
                                 class="border-b last:border-b-0"
                             >
-                                <td class="py-3 pr-4">{{ u.name }}</td>
-                                <td class="py-3 pr-4">{{ u.email }}</td>
                                 <td class="py-3 pr-4">
-                                    <span class="rounded-md px-2 py-1 text-xs" :class="u.is_admin ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'">
-                                        {{ u.is_admin ? 'Admin' : 'User' }}
-                                    </span>
+                                    <template v-if="editUserId === u.id">
+                                        <input v-model="editForm.name" type="text" class="w-full rounded-md border bg-background px-3 py-2" />
+                                    </template>
+                                    <template v-else>
+                                        {{ u.name }}
+                                    </template>
+                                </td>
+                                <td class="py-3 pr-4">
+                                    <template v-if="editUserId === u.id">
+                                        <div class="space-y-2">
+                                            <input v-model="editForm.email" type="email" class="w-full rounded-md border bg-background px-3 py-2" />
+                                            <input
+                                                v-model="editForm.password"
+                                                type="password"
+                                                class="w-full rounded-md border bg-background px-3 py-2"
+                                                placeholder="New password (optional)"
+                                            />
+                                        </div>
+                                    </template>
+                                    <template v-else>
+                                        {{ u.email }}
+                                    </template>
+                                </td>
+                                <td class="py-3 pr-4">
+                                    <template v-if="editUserId === u.id">
+                                        <label class="inline-flex items-center gap-2 text-sm">
+                                            <input v-model="editForm.is_admin" type="checkbox" />
+                                            Admin
+                                        </label>
+                                    </template>
+                                    <template v-else>
+                                        <span class="rounded-md px-2 py-1 text-xs" :class="u.is_admin ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'">
+                                            {{ u.is_admin ? 'Admin' : 'User' }}
+                                        </span>
+                                    </template>
                                 </td>
                                 <td class="py-3 pr-4">
                                     <div class="flex gap-2">
@@ -101,6 +160,38 @@ function peekConversation(conversationId: number) {
                                         >
                                             {{ u.is_admin ? 'Remove admin' : 'Make admin' }}
                                         </button>
+                                        <template v-if="editUserId === u.id">
+                                            <button
+                                                type="button"
+                                                class="rounded-md border px-3 py-1 hover:bg-muted"
+                                                @click="updateUser(u.id)"
+                                            >
+                                                Save
+                                            </button>
+                                            <button
+                                                type="button"
+                                                class="rounded-md border px-3 py-1 hover:bg-muted"
+                                                @click="cancelEdit"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </template>
+                                        <template v-else>
+                                            <button
+                                                type="button"
+                                                class="rounded-md border px-3 py-1 hover:bg-muted"
+                                                @click="startEdit(u)"
+                                            >
+                                                Edit
+                                            </button>
+                                        </template>
+                                        <button
+                                            type="button"
+                                            class="rounded-md border px-3 py-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-950"
+                                            @click="deleteUser(u.id, u.name)"
+                                        >
+                                            Delete
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -109,46 +200,6 @@ function peekConversation(conversationId: number) {
                 </div>
             </div>
 
-            <div class="rounded-xl border p-4">
-                <h2 class="mb-3 text-lg font-semibold">
-                    Peek Conversations
-                    <span v-if="props.selectedUserName" class="text-muted-foreground">- {{ props.selectedUserName }}</span>
-                </h2>
-
-                <div v-if="!props.selectedUserId" class="text-sm text-muted-foreground">
-                    Select a user above to see their conversations.
-                </div>
-
-                <div v-else-if="props.selectedUserConversations.length === 0" class="text-sm text-muted-foreground">
-                    This user has no conversations yet.
-                </div>
-
-                <div v-else class="space-y-2">
-                    <div
-                        v-for="conversation in props.selectedUserConversations"
-                        :key="conversation.id"
-                        class="flex items-center justify-between rounded-lg border p-3"
-                    >
-                        <div>
-                            <div class="font-medium">{{ conversation.name }}</div>
-                            <div class="text-xs text-muted-foreground">
-                                {{ conversation.type }} conversation
-                                <span v-if="conversation.latest_message">
-                                    - {{ conversation.latest_message.sender_name }}: {{ conversation.latest_message.body ?? 'Attachment' }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <button
-                            type="button"
-                            class="rounded-md border px-3 py-1 text-sm hover:bg-muted"
-                            @click="peekConversation(conversation.id)"
-                        >
-                            Peek
-                        </button>
-                    </div>
-                </div>
-            </div>
         </div>
     </AppLayout>
 </template>

@@ -50,8 +50,13 @@ const mainNavItems = computed<NavItem[]>(() => {
 
     if (isAdmin.value) {
         items.push({
-            title: 'User Management',
+            title: 'Users CRUD',
             href: '/admin/users',
+            icon: Users,
+        });
+        items.push({
+            title: 'Users Peek',
+            href: '/admin/users/peek',
             icon: Users,
         });
     }
