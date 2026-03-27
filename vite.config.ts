@@ -2,35 +2,40 @@ import { wayfinder } from '@laravel/vite-plugin-wayfinder';
 import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import laravel from 'laravel-vite-plugin';
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 
-export default defineConfig({
-    server: {
-        // Use a browser-reachable host for injected dev scripts.
-        host: '127.0.0.1',
-        port: 5173,
-        strictPort: true,
-        hmr: {
-            host: '127.0.0.1',
-        },
-    },
-    plugins: [
-        laravel({
-            input: ['resources/js/app.ts'],
-            ssr: 'resources/js/ssr.ts',
-            refresh: true,
-        }),
-        tailwindcss(),
-        vue({
-            template: {
-                transformAssetUrls: {
-                    base: null,
-                    includeAbsolute: false,
-                },
+export default defineConfig(({ mode }) => {
+    const env = loadEnv(mode, process.cwd(), '');
+    const devHost = env.VITE_DEV_HOST || '127.0.0.1';
+
+    return {
+        server: {
+            // Keep host/HMR aligned to prevent mixed localhost/LAN URLs.
+            host: devHost,
+            port: 5173,
+            strictPort: true,
+            hmr: {
+                host: devHost,
             },
-        }),
-        wayfinder({
-            formVariants: true,
-        }),
-    ],
+        },
+        plugins: [
+            laravel({
+                input: ['resources/js/app.ts'],
+                ssr: 'resources/js/ssr.ts',
+                refresh: true,
+            }),
+            tailwindcss(),
+            vue({
+                template: {
+                    transformAssetUrls: {
+                        base: null,
+                        includeAbsolute: false,
+                    },
+                },
+            }),
+            wayfinder({
+                formVariants: true,
+            }),
+        ],
+    };
 });

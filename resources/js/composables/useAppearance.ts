@@ -66,12 +66,20 @@ const mediaQuery = () => {
     return window.matchMedia('(prefers-color-scheme: dark)');
 };
 
-const getStoredAppearance = () => {
+function normalizeAppearance(raw: string | null): Appearance | null {
+    if (raw === 'light' || raw === 'dark' || raw === 'system') {
+        return raw;
+    }
+
+    return null;
+}
+
+const getStoredAppearance = (): Appearance | null => {
     if (typeof window === 'undefined') {
         return null;
     }
 
-    return localStorage.getItem('appearance') as Appearance | null;
+    return normalizeAppearance(localStorage.getItem('appearance'));
 };
 
 const handleSystemThemeChange = () => {
@@ -99,21 +107,23 @@ function readStoredAppearance(): Appearance {
         return 'system';
     }
 
-    return (localStorage.getItem('appearance') as Appearance | null) ?? 'system';
+    return normalizeAppearance(localStorage.getItem('appearance')) ?? 'system';
 }
 
 /** Keep in sync with initializeTheme() / localStorage so first paint matches <html class="dark"> */
 const appearance = ref<Appearance>(readStoredAppearance());
 
+let didSyncAppearanceFromStorage = false;
+
 export function useAppearance(): UseAppearanceReturn {
     onMounted(() => {
-        const savedAppearance = localStorage.getItem(
-            'appearance',
-        ) as Appearance | null;
-
-        if (savedAppearance) {
-            appearance.value = savedAppearance;
+        if (didSyncAppearanceFromStorage) {
+            return;
         }
+
+        didSyncAppearanceFromStorage = true;
+        appearance.value = readStoredAppearance();
+        updateTheme(appearance.value);
     });
 
     const resolvedAppearance = computed<ResolvedAppearance>(() => {
