@@ -30,6 +30,13 @@ class UserManagementController extends Controller
         return Inertia::render('Admin/UsersCreate');
     }
 
+    public function edit(User $user): Response
+    {
+        return Inertia::render('Admin/UsersEdit', [
+            'user' => $user->only(['id', 'name', 'email', 'is_admin']),
+        ]);
+    }
+
     public function peek(Request $request): Response
     {
         $selectedUserId = (int) ($request->integer('user_id') ?: 0);
